@@ -6,151 +6,66 @@
   <title>Comunicação - Loja</title>
   <style>
     :root {
-      --bg: #f5f4f0;
-      --card-bg: #ffffff;
-      --accent: #1f1f1f;
-      --text: #222222;
-      --subtext: #666666;
-      --msg-me: #e3f2fd;
-      --msg-other: #f0f0f0;
+      --bg: #f5f4f0; --card-bg: #ffffff; --accent: #1f1f1f;
+      --text: #222222; --subtext: #666666; --msg-me: #e3f2fd; --msg-other: #f0f0f0;
     }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background-color: var(--bg);
-      color: var(--text);
-      margin: 0;
-      padding: 15px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      background-color: var(--bg); color: var(--text);
+      margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center;
     }
     .container { width: 100%; max-width: 400px; }
     .header { text-align: center; margin-bottom: 12px; }
     .header h2 { font-weight: 300; letter-spacing: 2px; margin: 0 0 5px 0; }
     
     .btn-audio {
-      background: #2e7d32;
-      color: white;
-      border: none;
-      padding: 10px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: bold;
-      width: 100%;
-      margin-bottom: 12px;
-      cursor: pointer;
+      background: #2e7d32; color: white; border: none; padding: 12px;
+      border-radius: 8px; font-size: 13px; font-weight: bold; width: 100%;
+      margin-bottom: 12px; cursor: pointer; box-shadow: 0 4px 10px rgba(46,125,50,0.2);
     }
+    .status-conectado { background: #e0e0e0; color: #666; box-shadow: none; pointer-events: none; }
 
     .card {
-      background: var(--card-bg);
-      border-radius: 16px;
-      padding: 16px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.04);
-      margin-bottom: 12px;
+      background: var(--card-bg); border-radius: 16px; padding: 16px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.04); margin-bottom: 12px;
     }
     label {
-      font-size: 11px;
-      color: var(--subtext);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      display: block;
-      margin-bottom: 6px;
+      font-size: 11px; color: var(--subtext); text-transform: uppercase;
+      letter-spacing: 1px; display: block; margin-bottom: 6px;
     }
     select, input {
-      width: 100%;
-      padding: 12px;
-      border-radius: 8px;
-      border: 1px solid #e0e0e0;
-      background: #fafafa;
-      font-size: 14px;
-      box-sizing: border-box;
-      outline: none;
+      width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #e0e0e0;
+      background: #fafafa; font-size: 14px; box-sizing: border-box; outline: none;
     }
-    .btn-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-top: 8px;
-    }
+    .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
     button {
-      background: var(--accent);
-      color: white;
-      border: none;
-      padding: 12px;
-      border-radius: 8px;
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
+      background: var(--accent); color: white; border: none; padding: 12px;
+      border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer;
     }
     button:active { opacity: 0.8; }
     
-    /* CHAT BOX */
     .chat-box {
-      height: 200px;
-      overflow-y: auto;
-      border: 1px solid #eaeaea;
-      border-radius: 8px;
-      padding: 10px;
-      background: #fafafa;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
+      height: 200px; overflow-y: auto; border: 1px solid #eaeaea;
+      border-radius: 8px; padding: 10px; background: #fafafa;
+      display: flex; flex-direction: column; gap: 8px;
     }
-    .message {
-      max-width: 80%;
-      padding: 8px 12px;
-      border-radius: 12px;
-      font-size: 13px;
-      line-height: 1.4;
-    }
-    .message.me {
-      align-self: flex-end;
-      background: var(--msg-me);
-      color: #0d47a1;
-      border-bottom-right-radius: 2px;
-    }
-    .message.other {
-      align-self: flex-start;
-      background: var(--msg-other);
-      color: #333;
-      border-bottom-left-radius: 2px;
-    }
-    .msg-author {
-      font-weight: bold;
-      font-size: 10px;
-      text-transform: uppercase;
-      margin-bottom: 2px;
-      opacity: 0.7;
-    }
-    .chat-input {
-      display: flex;
-      gap: 6px;
-      margin-top: 8px;
-    }
+    .message { max-width: 80%; padding: 8px 12px; border-radius: 12px; font-size: 13px; line-height: 1.4; word-wrap: break-word; }
+    .message.me { align-self: flex-end; background: var(--msg-me); color: #0d47a1; border-bottom-right-radius: 2px; }
+    .message.other { align-self: flex-start; background: var(--msg-other); color: #333; border-bottom-left-radius: 2px; }
+    .msg-author { font-weight: bold; font-size: 10px; text-transform: uppercase; margin-bottom: 2px; opacity: 0.7; }
+    .chat-input { display: flex; gap: 6px; margin-top: 8px; }
     .chat-input input { flex: 1; }
     .chat-input button { width: auto; padding: 0 16px; }
 
-    /* BANNER DE ALERTA */
     #banner {
-      display: none;
-      position: fixed;
-      top: 15px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #111;
-      color: #fff;
-      padding: 12px 20px;
-      border-radius: 25px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-      z-index: 1000;
-      text-align: center;
-      font-size: 13px;
-      width: 85%;
-      max-width: 320px;
+      display: none; position: fixed; top: 15px; left: 50%; transform: translateX(-50%);
+      background: #111; color: #fff; padding: 12px 20px; border-radius: 25px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2); z-index: 1000; text-align: center;
+      font-size: 13px; width: 85%; max-width: 320px;
     }
   </style>
 </head>
-<body onclick="liberarAudio()">
+<body>
 
   <div id="banner"></div>
 
@@ -159,7 +74,7 @@
       <h2>LOJA CONECTADA</h2>
     </div>
 
-    <button class="btn-audio" id="btnAudio" onclick="liberarAudio()">🔔 CLIQUE AQUI PARA ATIVAR O SOM</button>
+    <button class="btn-audio" id="btnAudio">🔔 CLIQUE AQUI PARA CONECTAR E ATIVAR SOM</button>
 
     <div class="card">
       <label for="meuNome">Seu Aparelho / Usuário:</label>
@@ -204,85 +119,162 @@
       <div class="chat-box" id="chatBox">
         <div class="message other">
           <div class="msg-author">SISTEMA</div>
-          Sistema protegido e pronto. Clique no botão acima para ativar o som!
+          Aguardando conexão... Clique no botão verde acima.
         </div>
       </div>
       
       <div class="chat-input">
-        <input type="text" id="chatInput" placeholder="Digite uma mensagem..." onkeypress="checarEnter(event)">
+        <input type="text" id="chatInput" placeholder="Digite e aperte Enter..." onkeypress="checarEnter(event)">
         <button onclick="enviarTextoChat()">Enviar</button>
       </div>
     </div>
   </div>
 
   <script>
+    // Configurações
     const CANAL_LOJA = "loja-casual-chique-a8f92k19-privado";
     const CHAVE_LOJA = "SenhaSecretaLoja2026";
 
     const selectLogin = document.getElementById('meuNome');
     const selectDestino = document.getElementById('destinatario');
     const chatBox = document.getElementById('chatBox');
+    const btnAudio = document.getElementById('btnAudio');
 
+    // Recupera Login
+    if (localStorage.getItem('loja_usuario')) {
+      selectLogin.value = localStorage.getItem('loja_usuario');
+    }
+    function salvarLogin() {
+      localStorage.setItem('loja_usuario', selectLogin.value);
+    }
+
+    // 1. GESTÃO DE ÁUDIO MAIS ROBUSTA
     let audioCtx = null;
+    let somAtivo = false;
 
-    function obterAudioContext() {
+    function iniciarSistema() {
       if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       }
       if (audioCtx.state === 'suspended') {
         audioCtx.resume();
       }
-      return audioCtx;
+      
+      somAtivo = true;
+      btnAudio.innerText = '✅ SISTEMA E SOM CONECTADOS';
+      btnAudio.classList.add('status-conectado');
+      
+      // Inicia a conexão depois que o usuário interagiu
+      conectarServidor();
     }
 
-    function liberarAudio() {
-      obterAudioContext();
-      const btn = document.getElementById('btnAudio');
-      btn.style.background = '#e0e0e0';
-      btn.style.color = '#666';
-      btn.innerText = '🔊 SOM ATIVADO E PRONTO';
-    }
+    // Ouvintes diretos (necessário para iPhones funcionarem certinho)
+    btnAudio.addEventListener('click', iniciarSistema);
+    btnAudio.addEventListener('touchstart', iniciarSistema, {passive: true});
 
-    if (localStorage.getItem('loja_usuario')) {
-      selectLogin.value = localStorage.getItem('loja_usuario');
-    }
-
-    function salvarLogin() {
-      localStorage.setItem('loja_usuario', selectLogin.value);
-    }
-
-    function tocarChimeAudivel() {
+    function tocarChime() {
+      if (!somAtivo || !audioCtx) return;
       try {
-        const ctx = obterAudioContext();
-        
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+
         function tocarNota(freq, inicio, duracao) {
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
           osc.type = 'sine';
-          osc.frequency.setValueAtTime(freq, ctx.currentTime + inicio);
-          gain.gain.setValueAtTime(0.22, ctx.currentTime + inicio);
-          gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + inicio + duracao);
-          
+          osc.frequency.setValueAtTime(freq, audioCtx.currentTime + inicio);
+          gain.gain.setValueAtTime(0.3, audioCtx.currentTime + inicio);
+          gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + inicio + duracao);
           osc.connect(gain);
-          gain.connect(ctx.destination);
-          
-          osc.start(ctx.currentTime + inicio);
-          osc.stop(ctx.currentTime + inicio + duracao);
+          gain.connect(audioCtx.destination);
+          osc.start(audioCtx.currentTime + inicio);
+          osc.stop(audioCtx.currentTime + inicio + duracao);
         }
 
         tocarNota(783.99, 0.0, 0.35);
         tocarNota(523.25, 0.2, 0.5);
         tocarNota(783.99, 0.7, 0.35);
         tocarNota(523.25, 0.9, 0.6);
-
       } catch (e) {
-        console.log("Aguardando ativação do áudio.");
+        console.error("Erro ao tocar som", e);
       }
     }
 
+    // 2. CONEXÃO ANTI-QUEDA (SSE)
+    let eventSource = null;
+
+    function conectarServidor() {
+      if (eventSource) {
+        eventSource.close();
+      }
+
+      eventSource = new EventSource(`https://ntfy.sh/${CANAL_LOJA}/sse`);
+      
+      eventSource.onopen = () => {
+        console.log("Conectado ao servidor.");
+      };
+
+      eventSource.onmessage = (event) => {
+        try {
+          // Extrai o JSON principal enviado pelo ntfy
+          const ntfyData = JSON.parse(event.data);
+          
+          // IGNORA sinais de keepalive do servidor (isso quebrava o código antigo)
+          if (ntfyData.event !== "message") return;
+
+          // Processa a nossa mensagem
+          const dados = JSON.parse(ntfyData.message);
+
+          // Segurança
+          if (dados.chave !== CHAVE_LOJA) return;
+
+          const meuUsuario = selectLogin.value;
+
+          // Regra de Destino
+          if (dados.para === 'TODOS' || dados.para === meuUsuario || dados.de === meuUsuario) {
+            
+            const eMinha = dados.de === meuUsuario;
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${eMinha ? 'me' : 'other'}`;
+            
+            const paraTexto = dados.para !== 'TODOS' ? ` ➔ ${dados.para}` : '';
+            msgDiv.innerHTML = `<div class="msg-author">${dados.de}${paraTexto}</div>${dados.texto}`;
+            
+            chatBox.appendChild(msgDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            if (!eMinha) {
+              tocarChime();
+              if (navigator.vibrate) navigator.vibrate([150, 80, 150]);
+
+              const banner = document.getElementById('banner');
+              banner.innerHTML = `<strong>${dados.de}</strong> (${dados.para}):<br>${dados.texto}`;
+              banner.style.display = 'block';
+              setTimeout(() => { banner.style.display = 'none'; }, 5000);
+            }
+          }
+        } catch (e) {
+          console.error("Erro ao processar mensagem", e);
+        }
+      };
+
+      // Se a conexão cair, tenta de novo sozinho em 3 segundos
+      eventSource.onerror = () => {
+        console.log("Conexão falhou. Tentando reconectar...");
+        eventSource.close();
+        setTimeout(conectarServidor, 3000);
+      };
+    }
+
+    // Se o celular apagar a tela e voltar, força a reconexão
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === 'visible' && somAtivo) {
+        conectarServidor();
+      }
+    });
+
+    // 3. ENVIO DE MENSAGENS
     function enviarMensagem(texto) {
-      liberarAudio();
+      if (!somAtivo) iniciarSistema();
       const remetente = selectLogin.value;
       const destino = selectDestino.value;
 
@@ -294,7 +286,7 @@
           texto: texto,
           chave: CHAVE_LOJA
         })
-      });
+      }).catch(err => console.error("Erro ao enviar:", err));
     }
 
     function enviarTextoChat() {
@@ -308,43 +300,6 @@
     function checarEnter(e) {
       if (e.key === 'Enter') enviarTextoChat();
     }
-
-    const eventSource = new EventSource(`https://ntfy.sh/${CANAL_LOJA}/sse`);
-    
-    eventSource.onmessage = (event) => {
-      try {
-        const dados = JSON.parse(JSON.parse(event.data).message);
-
-        if (dados.chave !== CHAVE_LOJA) return;
-
-        const meuUsuario = selectLogin.value;
-
-        if (dados.para === 'TODOS' || dados.para === meuUsuario || dados.de === meuUsuario) {
-          
-          const eMinha = dados.de === meuUsuario;
-          const msgDiv = document.createElement('div');
-          msgDiv.className = `message ${eMinha ? 'me' : 'other'}`;
-          
-          const paraTexto = dados.para !== 'TODOS' ? ` ➔ ${dados.para}` : '';
-          msgDiv.innerHTML = `<div class="msg-author">${dados.de}${paraTexto}</div>${dados.texto}`;
-          
-          chatBox.appendChild(msgDiv);
-          chatBox.scrollTop = chatBox.scrollHeight;
-
-          if (!eMinha) {
-            tocarChimeAudivel();
-            if (navigator.vibrate) navigator.vibrate([150, 80, 150]);
-
-            const banner = document.getElementById('banner');
-            banner.innerHTML = `<strong>${dados.de}</strong> (${dados.para}):<br>${dados.texto}`;
-            banner.style.display = 'block';
-            setTimeout(() => { banner.style.display = 'none'; }, 5000);
-          }
-        }
-      } catch (e) {
-        // Ignora msgs internas
-      }
-    };
   </script>
 </body>
 </html>
