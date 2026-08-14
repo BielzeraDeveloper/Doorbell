@@ -3,80 +3,145 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chamador - Loja</title>
+  <title>Comunicação - Loja</title>
   <style>
     :root {
-      --bg-color: #f7f6f2;
+      --bg: #f5f4f0;
       --card-bg: #ffffff;
-      --accent: #2c2c2c;
-      --text: #1a1a1a;
-      --subtext: #767676;
+      --accent: #1f1f1f;
+      --text: #222222;
+      --subtext: #666666;
+      --msg-me: #e3f2fd;
+      --msg-other: #f0f0f0;
     }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background-color: var(--bg-color);
+      background-color: var(--bg);
       color: var(--text);
-      padding: 20px;
       margin: 0;
+      padding: 15px;
       display: flex;
       flex-direction: column;
       align-items: center;
     }
-    .header { text-align: center; margin-bottom: 20px; }
-    .header h2 { font-weight: 300; letter-spacing: 2px; margin-bottom: 5px; }
-    
+    .container {
+      width: 100%;
+      max-width: 400px;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 15px;
+    }
+    .header h2 {
+      font-weight: 300;
+      letter-spacing: 2px;
+      margin: 0 0 5px 0;
+    }
     .card {
       background: var(--card-bg);
       border-radius: 16px;
-      padding: 20px;
-      width: 100%;
-      max-width: 360px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
-      margin-bottom: 15px;
-      box-sizing: border-box;
+      padding: 16px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+      margin-bottom: 12px;
     }
-    label { font-size: 13px; color: var(--subtext); text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 8px; }
-    select {
+    label {
+      font-size: 11px;
+      color: var(--subtext);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      display: block;
+      margin-bottom: 6px;
+    }
+    select, input {
       width: 100%;
       padding: 12px;
-      border-radius: 10px;
+      border-radius: 8px;
       border: 1px solid #e0e0e0;
       background: #fafafa;
-      font-size: 15px;
-      margin-bottom: 10px;
+      font-size: 14px;
+      box-sizing: border-box;
       outline: none;
+    }
+    .btn-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 8px;
     }
     button {
       background: var(--accent);
       color: white;
       border: none;
-      padding: 14px;
-      border-radius: 10px;
-      font-size: 15px;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 13px;
       font-weight: 500;
       cursor: pointer;
-      width: 100%;
-      margin-top: 8px;
-      transition: background 0.2s;
     }
     button:active { opacity: 0.8; }
-    .btn-secondary { background: #575757; }
     
-    /* Alerta visual na tela */
+    /* CHAT BOX */
+    .chat-box {
+      height: 220px;
+      overflow-y: auto;
+      border: 1px solid #eaeaea;
+      border-radius: 8px;
+      padding: 10px;
+      background: #fafafa;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .message {
+      max-width: 80%;
+      padding: 8px 12px;
+      border-radius: 12px;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    .message.me {
+      align-self: flex-end;
+      background: var(--msg-me);
+      color: #0d47a1;
+      border-bottom-right-radius: 2px;
+    }
+    .message.other {
+      align-self: flex-start;
+      background: var(--msg-other);
+      color: #333;
+      border-bottom-left-radius: 2px;
+    }
+    .msg-author {
+      font-weight: bold;
+      font-size: 10px;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+      opacity: 0.7;
+    }
+    .chat-input {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .chat-input input { flex: 1; }
+    .chat-input button { width: auto; padding: 0 16px; }
+
+    /* BANNER DE ALERTA */
     #banner {
       display: none;
       position: fixed;
-      top: 20px;
+      top: 15px;
       left: 50%;
       transform: translateX(-50%);
-      background: #1a1a1a;
+      background: #111;
       color: #fff;
-      padding: 16px 24px;
-      border-radius: 30px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      padding: 12px 20px;
+      border-radius: 25px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
       z-index: 1000;
       text-align: center;
-      width: 80%;
+      font-size: 13px;
+      width: 85%;
       max-width: 320px;
     }
   </style>
@@ -85,113 +150,151 @@
 
   <div id="banner"></div>
 
-  <div class="header">
-    <h2>CHAMADOR LOJA</h2>
-  </div>
+  <div class="container">
+    <div class="header">
+      <h2>LOJA CONECTADA</h2>
+    </div>
 
-  <div class="card">
-    <label for="meuNome">Este aparelho é:</label>
-    <select id="meuNome" onchange="salvarIdentidade()">
-      <option value="NOTEBOOK">💻 Notebook</option>
-      <option value="COMPUTADOR">🖥️ Computador</option>
-      <option value="VENDEDOR 1">📱 Vendedor 1</option>
-      <option value="VENDEDOR 2">📱 Vendedor 2</option>
-      <option value="VENDEDOR 3">📱 Vendedor 3</option>
-      <option value="ESTOQUE">📦 Estoque</option>
-      <option value="CAIXA">💳 Caixa</option>
-    </select>
-  </div>
+    <div class="card">
+      <label for="meuNome">Seu Aparelho / Usuário:</label>
+      <select id="meuNome" onchange="salvarLogin()">
+        <option value="NOTEBOOK">💻 Notebook</option>
+        <option value="COMPUTADOR">🖥️ Computador</option>
+        <option value="VENDEDOR 1">📱 Vendedor 1</option>
+        <option value="VENDEDOR 2">📱 Vendedor 2</option>
+        <option value="VENDEDOR 3">📱 Vendedor 3</option>
+        <option value="ESTOQUE">📦 Estoque</option>
+        <option value="CAIXA">💳 Caixa</option>
+      </select>
+    </div>
 
-  <div class="card">
-    <label>Disparar Alerta:</label>
-    <button onclick="chamar('Pedir peça no Estoque')">📦 Chamar Estoque</button>
-    <button class="btn-secondary" onclick="chamar('Apoio no Caixa / Troco')">💳 Chamar Caixa</button>
-    <button class="btn-secondary" onclick="chamar('Ajuda geral / Atendimento')">✋ Preciso de Ajuda</button>
+    <div class="card">
+      <label for="destinatario">Enviar Notificação/Mensagem Para:</label>
+      <select id="destinatario">
+        <option value="TODOS">📢 TODOS OS APARELHOS</option>
+        <option value="NOTEBOOK">💻 Notebook</option>
+        <option value="COMPUTADOR">🖥️ Computador</option>
+        <option value="VENDEDOR 1">📱 Vendedor 1</option>
+        <option value="VENDEDOR 2">📱 Vendedor 2</option>
+        <option value="VENDEDOR 3">📱 Vendedor 3</option>
+        <option value="ESTOQUE">📦 Estoque</option>
+        <option value="CAIXA">💳 Caixa</option>
+      </select>
+
+      <div class="btn-grid">
+        <button onclick="enviarMensagem('⚡ Alerta: Preciso de ajuda!')">⚡ Pedir Ajuda</button>
+        <button onclick="enviarMensagem('📦 Alerta: Trazer peça no provador')">📦 Pedir Peça</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <label>Chat Interno</label>
+      <div class="chat-box" id="chatBox">
+        <div class="message other">
+          <div class="msg-author">SISTEMA</div>
+          Bem-vindo ao chat da loja!
+        </div>
+      </div>
+      
+      <div class="chat-input">
+        <input type="text" id="chatInput" placeholder="Digite uma mensagem..." onkeypress="checarEnter(event)">
+        <button onclick="enviarTextoChat()">Enviar</button>
+      </div>
+    </div>
   </div>
 
   <script>
-    // Substitua se quiser por um código próprio da sua loja
     const CANAL_LOJA = "loja-casual-chique-9988";
+    const selectLogin = document.getElementById('meuNome');
+    const selectDestino = document.getElementById('destinatario');
+    const chatBox = document.getElementById('chatBox');
 
-    // Salva e recupera o nome do dispositivo na memória do aparelho
-    const select = document.getElementById('meuNome');
-    
-    if (localStorage.getItem('dispositivo_nome')) {
-      select.value = localStorage.getItem('dispositivo_nome');
+    // Recupera o Login Salvo
+    if (localStorage.getItem('loja_usuario')) {
+      selectLogin.value = localStorage.getItem('loja_usuario');
     }
 
-    function salvarIdentidade() {
-      localStorage.setItem('dispositivo_nome', select.value);
+    function salvarLogin() {
+      localStorage.setItem('loja_usuario', selectLogin.value);
     }
 
-    // Função de Som Suave (Acorde Elegante de 2 Notas)
-    function tocarChimeChique() {
+    // Som de Notificação
+    function tocarChime() {
       const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      
-      // Primeira nota (A4 - 440Hz)
-      const osc1 = ctx.createOscillator();
-      const gain1 = ctx.createGain();
-      osc1.type = 'sine';
-      osc1.frequency.setValueAtTime(440, ctx.currentTime);
-      gain1.gain.setValueAtTime(0.08, ctx.currentTime);
-      gain1.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 1.0);
-      osc1.connect(gain1);
-      gain1.connect(ctx.destination);
-      osc1.start(ctx.currentTime);
-      osc1.stop(ctx.currentTime + 1.0);
-
-      // Segunda nota suave depois de 150ms (C#5 - 554.37Hz)
-      setTimeout(() => {
-        const osc2 = ctx.createOscillator();
-        const gain2 = ctx.createGain();
-        osc2.type = 'sine';
-        osc2.frequency.setValueAtTime(554.37, ctx.currentTime);
-        gain2.gain.setValueAtTime(0.08, ctx.currentTime);
-        gain2.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 1.2);
-        osc2.connect(gain2);
-        gain2.connect(ctx.destination);
-        osc2.start(ctx.currentTime);
-        osc2.stop(ctx.currentTime + 1.2);
-      }, 150);
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(554.37, ctx.currentTime);
+      gain.gain.setValueAtTime(0.08, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 1.0);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 1.0);
     }
 
-    // Disparar o chamado
-    function chamar(motivo) {
-      const quemChamou = select.value;
-      
+    // Função Geral para Enviar Mensagem/Alerta
+    function enviarMensagem(texto) {
+      const remetente = selectLogin.value;
+      const destino = selectDestino.value;
+
       fetch(`https://ntfy.sh/${CANAL_LOJA}`, {
         method: 'POST',
-        body: JSON.stringify({ quem: quemChamou, motivo: motivo })
+        body: JSON.stringify({
+          de: remetente,
+          para: destino,
+          texto: texto
+        })
       });
     }
 
-    // Escutar chamadas recebidas
+    function enviarTextoChat() {
+      const input = document.getElementById('chatInput');
+      if (input.value.trim() !== '') {
+        enviarMensagem(input.value);
+        input.value = '';
+      }
+    }
+
+    function checarEnter(e) {
+      if (e.key === 'Enter') enviarTextoChat();
+    }
+
+    // Escutar Mensagens em Tempo Real
     const eventSource = new EventSource(`https://ntfy.sh/${CANAL_LOJA}/sse`);
     
     eventSource.onmessage = (event) => {
       try {
         const dados = JSON.parse(JSON.parse(event.data).message);
-        
-        // Toca o som suave
-        tocarChimeChique();
+        const meuUsuario = selectLogin.value;
 
-        // Vibra se for celular
-        if (navigator.vibrate) {
-          navigator.vibrate([100, 80, 100]);
+        // Verifica se a mensagem é para TODOS, para MIM ou enviada por MIM
+        if (dados.para === 'TODOS' || dados.para === meuUsuario || dados.de === meuUsuario) {
+          
+          // Adiciona ao Chat
+          const eMinha = dados.de === meuUsuario;
+          const msgDiv = document.createElement('div');
+          msgDiv.className = `message ${eMinha ? 'me' : 'other'}`;
+          
+          const paraTexto = dados.para !== 'TODOS' ? ` ➔ ${dados.para}` : '';
+          msgDiv.innerHTML = `<div class="msg-author">${dados.de}${paraTexto}</div>${dados.texto}`;
+          
+          chatBox.appendChild(msgDiv);
+          chatBox.scrollTop = chatBox.scrollHeight;
+
+          // Se a mensagem veio de outra pessoa, toca o som e mostra alerta
+          if (!eMinha) {
+            tocarChime();
+            if (navigator.vibrate) navigator.vibrate([80, 50, 80]);
+
+            const banner = document.getElementById('banner');
+            banner.innerHTML = `<strong>${dados.de}</strong> (${dados.para}):<br>${dados.texto}`;
+            banner.style.display = 'block';
+            setTimeout(() => { banner.style.display = 'none'; }, 4000);
+          }
         }
-
-        // Exibe o banner na tela
-        const banner = document.getElementById('banner');
-        banner.innerHTML = `<strong>${dados.quem}</strong><br>${dados.motivo}`;
-        banner.style.display = 'block';
-
-        // Esconde o aviso depois de 5 segundos
-        setTimeout(() => {
-          banner.style.display = 'none';
-        }, 5000);
-
       } catch (e) {
-        // Ignora mensagens do servidor
+        // Ignora mensagens de controle do sistema
       }
     };
   </script>
