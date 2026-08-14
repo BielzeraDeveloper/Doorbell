@@ -8,6 +8,7 @@
     :root {
       --bg: #f5f4f0; --card-bg: #ffffff; --accent: #1f1f1f;
       --text: #222222; --subtext: #666666; --msg-me: #e3f2fd; --msg-other: #f0f0f0;
+      --error-bg: #ffebee; --error-text: #c62828;
     }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -45,14 +46,17 @@
     button:active { opacity: 0.8; }
     
     .chat-box {
-      height: 200px; overflow-y: auto; border: 1px solid #eaeaea;
+      height: 220px; overflow-y: auto; border: 1px solid #eaeaea;
       border-radius: 8px; padding: 10px; background: #fafafa;
       display: flex; flex-direction: column; gap: 8px;
     }
     .message { max-width: 80%; padding: 8px 12px; border-radius: 12px; font-size: 13px; line-height: 1.4; word-wrap: break-word; }
     .message.me { align-self: flex-end; background: var(--msg-me); color: #0d47a1; border-bottom-right-radius: 2px; }
     .message.other { align-self: flex-start; background: var(--msg-other); color: #333; border-bottom-left-radius: 2px; }
+    .message.system { align-self: center; background: #eee; color: #555; font-size: 11px; text-align: center; max-width: 95%; }
+    .message.error { align-self: center; background: var(--error-bg); color: var(--error-text); font-size: 11px; text-align: center; max-width: 95%; }
     .msg-author { font-weight: bold; font-size: 10px; text-transform: uppercase; margin-bottom: 2px; opacity: 0.7; }
+    
     .chat-input { display: flex; gap: 6px; margin-top: 8px; }
     .chat-input input { flex: 1; }
     .chat-input button { width: auto; padding: 0 16px; }
@@ -116,12 +120,7 @@
 
     <div class="card">
       <label>Chat Interno Privado</label>
-      <div class="chat-box" id="chatBox">
-        <div class="message other" id="msgStatus">
-          <div class="msg-author">SISTEMA</div>
-          Aguardando conexão com o servidor...
-        </div>
-      </div>
+      <div class="chat-box" id="chatBox"></div>
       
       <div class="chat-input">
         <input type="text" id="chatInput" placeholder="Digite e aperte Enter..." onkeypress="checarEnter(event)">
@@ -131,7 +130,7 @@
   </div>
 
   <script>
-    // Configurações
+    // Se o canal estiver "congestionado", mude levemente este nome
     const CANAL_LOJA = "loja-casual-chique-a8f92k19-privado";
     const CHAVE_LOJA = "SenhaSecretaLoja2026";
 
@@ -140,7 +139,6 @@
     const chatBox = document.getElementById('chatBox');
     const btnAudio = document.getElementById('btnAudio');
 
-    // Recupera Login
     if (localStorage.getItem('loja_usuario')) {
       selectLogin.value = localStorage.getItem('loja_usuario');
     }
@@ -148,31 +146,37 @@
       localStorage.setItem('loja_usuario', selectLogin.value);
     }
 
-    // 1. GESTÃO DE ÁUDIO
+    function logSistema(texto, tipo = 'system') {
+      const msgDiv = document.createElement('div');
+      msgDiv.className = `message ${tipo}`;
+      msgDiv.innerText = texto;
+      chatBox.appendChild(msgDiv);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    // ÁUDIO
     let audioCtx = null;
     let somAtivo = false;
 
-    function iniciarSistema() {
+    function iniciarAudio() {
       if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       }
       if (audioCtx.state === 'suspended') {
         audioCtx.resume();
       }
-      
       somAtivo = true;
       btnAudio.innerText = '✅ SOM ATIVADO';
       btnAudio.classList.add('status-conectado');
     }
 
-    btnAudio.addEventListener('click', iniciarSistema);
-    btnAudio.addEventListener('touchstart', iniciarSistema, {passive: true});
+    btnAudio.addEventListener('click', iniciarAudio);
+    btnAudio.addEventListener('touchstart', iniciarAudio, {passive: true});
 
     function tocarChime() {
       if (!somAtivo || !audioCtx) return;
       try {
         if (audioCtx.state === 'suspended') audioCtx.resume();
-
         function tocarNota(freq, inicio, duracao) {
           const osc = audioCtx.createOscillator();
           const gain = audioCtx.createGain();
@@ -185,32 +189,24 @@
           osc.start(audioCtx.currentTime + inicio);
           osc.stop(audioCtx.currentTime + inicio + duracao);
         }
-
         tocarNota(783.99, 0.0, 0.35);
         tocarNota(523.25, 0.2, 0.5);
-        tocarNota(783.99, 0.7, 0.35);
-        tocarNota(523.25, 0.9, 0.6);
       } catch (e) {
-        console.error("Erro ao tocar som", e);
+        console.error("Erro áudio:", e);
       }
     }
 
-    // 2. CONEXÃO (CORRIGIDA)
+    // CONEXÃO SSE
     let eventSource = null;
 
     function conectarServidor() {
-      if (eventSource) {
-        eventSource.close();
-      }
+      if (eventSource) eventSource.close();
 
+      logSistema("Conectando ao servidor...");
       eventSource = new EventSource(`https://ntfy.sh/${CANAL_LOJA}/sse`);
-      
+
       eventSource.onopen = () => {
-        console.log("Conectado ao servidor.");
-        const msgStatus = document.getElementById('msgStatus');
-        if (msgStatus) {
-          msgStatus.innerHTML = `<div class="msg-author">SISTEMA</div>Chat Online. Pronto para uso!`;
-        }
+        logSistema("🟢 Conectado e pronto para uso!");
       };
 
       eventSource.onmessage = (event) => {
@@ -218,14 +214,18 @@
           const ntfyData = JSON.parse(event.data);
           if (ntfyData.event !== "message") return;
 
-          const dados = JSON.parse(ntfyData.message);
+          let dados;
+          try {
+            dados = JSON.parse(ntfyData.message);
+          } catch(e) {
+            return; // Ignora mensagens que não sejam do nosso formato JSON
+          }
+
           if (dados.chave !== CHAVE_LOJA) return;
 
           const meuUsuario = selectLogin.value;
 
-          // Filtra para mostrar só se for para mim, se eu mandei, ou se for para TODOS
           if (dados.para === 'TODOS' || dados.para === meuUsuario || dados.de === meuUsuario) {
-            
             const eMinha = dados.de === meuUsuario;
             const msgDiv = document.createElement('div');
             msgDiv.className = `message ${eMinha ? 'me' : 'other'}`;
@@ -247,43 +247,40 @@
             }
           }
         } catch (e) {
-          console.error("Ignorando mensagem com formato diferente.", e);
+          console.error("Erro ao ler dados:", e);
         }
       };
 
-      // Deixa o navegador fazer a reconexão automática sozinho!
       eventSource.onerror = () => {
-        console.log("Aguardando reconexão automática...");
+        logSistema("⚠️ Conexão oscilando... Reconectando...", "error");
       };
     }
 
-    // Já chama na hora que a página carrega pra não perder nenhuma mensagem
-    conectarServidor();
-
-    document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === 'visible' && eventSource && eventSource.readyState === EventSource.CLOSED) {
-        conectarServidor();
-      }
-    });
-
-    // 3. ENVIO DE MENSAGENS (COM HEADERS RESTAURADOS)
+    // ENVIO DE MENSAGENS
     function enviarMensagem(texto) {
       const remetente = selectLogin.value;
       const destino = selectDestino.value;
 
+      const payload = JSON.stringify({
+        de: remetente,
+        para: destino,
+        texto: texto,
+        chave: CHAVE_LOJA
+      });
+
       fetch(`https://ntfy.sh/${CANAL_LOJA}`, {
         method: 'POST',
-        headers: {
-          'Title': `${remetente} ➔ ${destino}`,
-          'Tags': 'speech_balloon'
-        },
-        body: JSON.stringify({
-          de: remetente,
-          para: destino,
-          texto: texto,
-          chave: CHAVE_LOJA
-        })
-      }).catch(err => console.error("Erro ao enviar:", err));
+        body: payload
+      })
+      .then(res => {
+        if (!res.ok) {
+          logSistema("❌ Erro ao enviar mensagem no servidor", "error");
+        }
+      })
+      .catch(err => {
+        logSistema("❌ Erro de rede ao tentar enviar", "error");
+        console.error(err);
+      });
     }
 
     function enviarTextoChat() {
@@ -297,6 +294,9 @@
     function checarEnter(e) {
       if (e.key === 'Enter') enviarTextoChat();
     }
+
+    // Inicialização imediata
+    conectarServidor();
   </script>
 </body>
 </html>
