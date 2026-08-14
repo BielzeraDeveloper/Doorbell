@@ -74,7 +74,7 @@
       <h2>LOJA CONECTADA</h2>
     </div>
 
-    <button class="btn-audio" id="btnAudio">🔔 CLIQUE AQUI PARA CONECTAR E ATIVAR SOM</button>
+    <button class="btn-audio" id="btnAudio">🔔 CLIQUE AQUI PARA ATIVAR O SOM</button>
 
     <div class="card">
       <label for="meuNome">Seu Aparelho / Usuário:</label>
@@ -117,9 +117,9 @@
     <div class="card">
       <label>Chat Interno Privado</label>
       <div class="chat-box" id="chatBox">
-        <div class="message other">
+        <div class="message other" id="msgStatus">
           <div class="msg-author">SISTEMA</div>
-          Sistema pronto. Clique no botão verde acima!
+          Aguardando conexão com o servidor...
         </div>
       </div>
       
@@ -131,7 +131,8 @@
   </div>
 
   <script>
-    const PREFIXO_CANAL = "loja-casual-chique-a8f92k19-";
+    // Configurações
+    const CANAL_LOJA = "loja-casual-chique-a8f92k19-privado";
     const CHAVE_LOJA = "SenhaSecretaLoja2026";
 
     const selectLogin = document.getElementById('meuNome');
@@ -139,14 +140,15 @@
     const chatBox = document.getElementById('chatBox');
     const btnAudio = document.getElementById('btnAudio');
 
+    // Recupera Login
     if (localStorage.getItem('loja_usuario')) {
       selectLogin.value = localStorage.getItem('loja_usuario');
     }
     function salvarLogin() {
       localStorage.setItem('loja_usuario', selectLogin.value);
-      conectarServidor();
     }
 
+    // 1. GESTÃO DE ÁUDIO
     let audioCtx = null;
     let somAtivo = false;
 
@@ -159,9 +161,8 @@
       }
       
       somAtivo = true;
-      btnAudio.innerText = '✅ SISTEMA E SOM CONECTADOS';
+      btnAudio.innerText = '✅ SOM ATIVADO';
       btnAudio.classList.add('status-conectado');
-      conectarServidor();
     }
 
     btnAudio.addEventListener('click', iniciarSistema);
@@ -194,64 +195,83 @@
       }
     }
 
-    let esGeral = null;
-    let esPessoal = null;
+    // 2. CONEXÃO (CORRIGIDA)
+    let eventSource = null;
 
     function conectarServidor() {
-      if (esGeral) esGeral.close();
-      if (esPessoal) esPessoal.close();
-
-      const meuUsuario = selectLogin.value;
-
-      esGeral = new EventSource(`https://ntfy.sh/${PREFIXO_CANAL}TODOS/sse`);
-      esGeral.onmessage = processarEvento;
-
-      esPessoal = new EventSource(`https://ntfy.sh/${PREFIXO_CANAL}${meuUsuario}/sse`);
-      esPessoal.onmessage = processarEvento;
-    }
-
-    function processarEvento(event) {
-      try {
-        const ntfyData = JSON.parse(event.data);
-        if (ntfyData.event !== "message") return;
-
-        const dados = JSON.parse(ntfyData.message);
-        if (dados.chave !== CHAVE_LOJA) return;
-
-        const meuUsuario = selectLogin.value;
-        const eMinha = dados.de === meuUsuario;
-
-        const msgDiv = document.createElement('div');
-        msgDiv.className = `message ${eMinha ? 'me' : 'other'}`;
-        
-        const paraTexto = dados.para !== 'TODOS' ? ` ➔ ${dados.para}` : '';
-        msgDiv.innerHTML = `<div class="msg-author">${dados.de}${paraTexto}</div>${dados.texto}`;
-        
-        chatBox.appendChild(msgDiv);
-        chatBox.scrollTop = chatBox.scrollHeight;
-
-        if (!eMinha) {
-          tocarChime();
-          if (navigator.vibrate) navigator.vibrate([150, 80, 150]);
-
-          const banner = document.getElementById('banner');
-          banner.innerHTML = `<strong>${dados.de}</strong> (${dados.para}):<br>${dados.texto}`;
-          banner.style.display = 'block';
-          setTimeout(() => { banner.style.display = 'none'; }, 5000);
-        }
-      } catch (e) {
-        console.error("Erro ao ler mensagem:", e);
+      if (eventSource) {
+        eventSource.close();
       }
+
+      eventSource = new EventSource(`https://ntfy.sh/${CANAL_LOJA}/sse`);
+      
+      eventSource.onopen = () => {
+        console.log("Conectado ao servidor.");
+        const msgStatus = document.getElementById('msgStatus');
+        if (msgStatus) {
+          msgStatus.innerHTML = `<div class="msg-author">SISTEMA</div>Chat Online. Pronto para uso!`;
+        }
+      };
+
+      eventSource.onmessage = (event) => {
+        try {
+          const ntfyData = JSON.parse(event.data);
+          if (ntfyData.event !== "message") return;
+
+          const dados = JSON.parse(ntfyData.message);
+          if (dados.chave !== CHAVE_LOJA) return;
+
+          const meuUsuario = selectLogin.value;
+
+          // Filtra para mostrar só se for para mim, se eu mandei, ou se for para TODOS
+          if (dados.para === 'TODOS' || dados.para === meuUsuario || dados.de === meuUsuario) {
+            
+            const eMinha = dados.de === meuUsuario;
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${eMinha ? 'me' : 'other'}`;
+            
+            const paraTexto = dados.para !== 'TODOS' ? ` ➔ ${dados.para}` : '';
+            msgDiv.innerHTML = `<div class="msg-author">${dados.de}${paraTexto}</div>${dados.texto}`;
+            
+            chatBox.appendChild(msgDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            if (!eMinha) {
+              tocarChime();
+              if (navigator.vibrate) navigator.vibrate([150, 80, 150]);
+
+              const banner = document.getElementById('banner');
+              banner.innerHTML = `<strong>${dados.de}</strong> (${dados.para}):<br>${dados.texto}`;
+              banner.style.display = 'block';
+              setTimeout(() => { banner.style.display = 'none'; }, 5000);
+            }
+          }
+        } catch (e) {
+          console.error("Ignorando mensagem com formato diferente.", e);
+        }
+      };
+
+      // Deixa o navegador fazer a reconexão automática sozinho!
+      eventSource.onerror = () => {
+        console.log("Aguardando reconexão automática...");
+      };
     }
 
+    // Já chama na hora que a página carrega pra não perder nenhuma mensagem
+    conectarServidor();
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === 'visible' && eventSource && eventSource.readyState === EventSource.CLOSED) {
+        conectarServidor();
+      }
+    });
+
+    // 3. ENVIO DE MENSAGENS (COM HEADERS RESTAURADOS)
     function enviarMensagem(texto) {
-      if (!somAtivo) iniciarSistema();
       const remetente = selectLogin.value;
       const destino = selectDestino.value;
 
-      const canalDestino = `${PREFIXO_CANAL}${destino}`;
-
-      fetch(`https://ntfy.sh/${canalDestino}`, {
+      fetch(`https://ntfy.sh/${CANAL_LOJA}`, {
         method: 'POST',
         headers: {
           'Title': `${remetente} ➔ ${destino}`,
@@ -263,7 +283,7 @@
           texto: texto,
           chave: CHAVE_LOJA
         })
-      });
+      }).catch(err => console.error("Erro ao enviar:", err));
     }
 
     function enviarTextoChat() {
