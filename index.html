@@ -130,7 +130,7 @@
     .chat-input input { flex: 1; }
     .chat-input button { width: auto; padding: 0 16px; }
 
-    /* BANNER DE ALERTA VISUAL */
+    /* BANNER DE ALERTA */
     #banner {
       display: none;
       position: fixed;
@@ -166,9 +166,12 @@
       <select id="meuNome" onchange="salvarLogin()">
         <option value="NOTEBOOK">💻 Notebook</option>
         <option value="COMPUTADOR">🖥️ Computador</option>
-        <option value="JHENIFER">📱 Jhenifer </option>
-        <option value="JENIFFER">📱 Jeniffer </option>
-        <option value="ANGELO">📱 Angelo </option>
+        <option value="Jhenifer">📱 Jhenifer</option>
+        <option value="Jeniffer">📱 Jeniffer</option>
+        <option value="Angelo">📱 Angelo</option>
+        <option value="Lia">📱 Lia</option>
+        <option value="Leo">📱 Leo</option>
+        <option value="Lu">📱 Lu</option>
         <option value="ESTOQUE">📦 Estoque</option>
         <option value="CAIXA">💳 Caixa</option>
       </select>
@@ -180,9 +183,12 @@
         <option value="TODOS">📢 TODOS OS APARELHOS</option>
         <option value="NOTEBOOK">💻 Notebook</option>
         <option value="COMPUTADOR">🖥️ Computador</option>
-        <option value="VENDEDOR 1">📱 Vendedor 1</option>
-        <option value="VENDEDOR 2">📱 Vendedor 2</option>
-        <option value="VENDEDOR 3">📱 Vendedor 3</option>
+        <option value="Jhenifer">📱 Jhenifer</option>
+        <option value="Jeniffer">📱 Jeniffer</option>
+        <option value="Angelo">📱 Angelo</option>
+        <option value="Lia">📱 Lia</option>
+        <option value="Leo">📱 Leo</option>
+        <option value="Lu">📱 Lu</option>
         <option value="ESTOQUE">📦 Estoque</option>
         <option value="CAIXA">💳 Caixa</option>
       </select>
@@ -194,11 +200,11 @@
     </div>
 
     <div class="card">
-      <label>Chat Interno</label>
+      <label>Chat Interno Privado</label>
       <div class="chat-box" id="chatBox">
         <div class="message other">
           <div class="msg-author">SISTEMA</div>
-          Bem-vindo! Lembre-se de clicar na tela para ativar o som.
+          Sistema protegido e pronto. Clique no botão acima para ativar o som!
         </div>
       </div>
       
@@ -210,12 +216,13 @@
   </div>
 
   <script>
-    const CANAL_LOJA = "loja-casual-chique-9988";
+    const CANAL_LOJA = "loja-casual-chique-a8f92k19-privado";
+    const CHAVE_LOJA = "SenhaSecretaLoja2026";
+
     const selectLogin = document.getElementById('meuNome');
     const selectDestino = document.getElementById('destinatario');
     const chatBox = document.getElementById('chatBox');
 
-    // Gerenciador do Som (AudioContext)
     let audioCtx = null;
 
     function obterAudioContext() {
@@ -244,7 +251,6 @@
       localStorage.setItem('loja_usuario', selectLogin.value);
     }
 
-    // SOM ELEGANTE E MAIS PRESENTE ("Ding-Dong" duplo)
     function tocarChimeAudivel() {
       try {
         const ctx = obterAudioContext();
@@ -255,8 +261,6 @@
           
           osc.type = 'sine';
           osc.frequency.setValueAtTime(freq, ctx.currentTime + inicio);
-          
-          // Volume ajustado para 0.22 (presença perfeita)
           gain.gain.setValueAtTime(0.22, ctx.currentTime + inicio);
           gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + inicio + duracao);
           
@@ -267,16 +271,13 @@
           osc.stop(ctx.currentTime + inicio + duracao);
         }
 
-        // 1º Ding-Dong (Sol5 -> Dó5)
-        tocarNota(783.99, 0.0, 0.35); // Ding
-        tocarNota(523.25, 0.2, 0.5);  // Dong
-
-        // 2º Ding-Dong (Repete após 0.7s para garantir que foi ouvido)
-        tocarNota(783.99, 0.7, 0.35); // Ding
-        tocarNota(523.25, 0.9, 0.6);  // Dong
+        tocarNota(783.99, 0.0, 0.35);
+        tocarNota(523.25, 0.2, 0.5);
+        tocarNota(783.99, 0.7, 0.35);
+        tocarNota(523.25, 0.9, 0.6);
 
       } catch (e) {
-        console.log("Aguardando toque para liberar som.");
+        console.log("Aguardando ativação do áudio.");
       }
     }
 
@@ -290,7 +291,8 @@
         body: JSON.stringify({
           de: remetente,
           para: destino,
-          texto: texto
+          texto: texto,
+          chave: CHAVE_LOJA
         })
       });
     }
@@ -307,12 +309,14 @@
       if (e.key === 'Enter') enviarTextoChat();
     }
 
-    // Escutar em tempo real
     const eventSource = new EventSource(`https://ntfy.sh/${CANAL_LOJA}/sse`);
     
     eventSource.onmessage = (event) => {
       try {
         const dados = JSON.parse(JSON.parse(event.data).message);
+
+        if (dados.chave !== CHAVE_LOJA) return;
+
         const meuUsuario = selectLogin.value;
 
         if (dados.para === 'TODOS' || dados.para === meuUsuario || dados.de === meuUsuario) {
@@ -338,7 +342,7 @@
           }
         }
       } catch (e) {
-        // Mensagens internas do ntfy
+        // Ignora msgs internas
       }
     };
   </script>
