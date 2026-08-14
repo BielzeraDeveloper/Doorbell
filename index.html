@@ -119,7 +119,7 @@
       <div class="chat-box" id="chatBox">
         <div class="message other">
           <div class="msg-author">SISTEMA</div>
-          Aguardando conexão... Clique no botão verde acima.
+          Sistema pronto. Clique no botão verde acima!
         </div>
       </div>
       
@@ -131,8 +131,7 @@
   </div>
 
   <script>
-    // Configurações
-    const CANAL_LOJA = "loja-casual-chique-a8f92k19-privado";
+    const PREFIXO_CANAL = "loja-casual-chique-a8f92k19-";
     const CHAVE_LOJA = "SenhaSecretaLoja2026";
 
     const selectLogin = document.getElementById('meuNome');
@@ -140,15 +139,14 @@
     const chatBox = document.getElementById('chatBox');
     const btnAudio = document.getElementById('btnAudio');
 
-    // Recupera Login
     if (localStorage.getItem('loja_usuario')) {
       selectLogin.value = localStorage.getItem('loja_usuario');
     }
     function salvarLogin() {
       localStorage.setItem('loja_usuario', selectLogin.value);
+      conectarServidor();
     }
 
-    // 1. GESTÃO DE ÁUDIO MAIS ROBUSTA
     let audioCtx = null;
     let somAtivo = false;
 
@@ -163,12 +161,9 @@
       somAtivo = true;
       btnAudio.innerText = '✅ SISTEMA E SOM CONECTADOS';
       btnAudio.classList.add('status-conectado');
-      
-      // Inicia a conexão depois que o usuário interagiu
       conectarServidor();
     }
 
-    // Ouvintes diretos (necessário para iPhones funcionarem certinho)
     btnAudio.addEventListener('click', iniciarSistema);
     btnAudio.addEventListener('touchstart', iniciarSistema, {passive: true});
 
@@ -199,94 +194,76 @@
       }
     }
 
-    // 2. CONEXÃO ANTI-QUEDA (SSE)
-    let eventSource = null;
+    let esGeral = null;
+    let esPessoal = null;
 
     function conectarServidor() {
-      if (eventSource) {
-        eventSource.close();
-      }
+      if (esGeral) esGeral.close();
+      if (esPessoal) esPessoal.close();
 
-      eventSource = new EventSource(`https://ntfy.sh/${CANAL_LOJA}/sse`);
-      
-      eventSource.onopen = () => {
-        console.log("Conectado ao servidor.");
-      };
+      const meuUsuario = selectLogin.value;
 
-      eventSource.onmessage = (event) => {
-        try {
-          // Extrai o JSON principal enviado pelo ntfy
-          const ntfyData = JSON.parse(event.data);
-          
-          // IGNORA sinais de keepalive do servidor (isso quebrava o código antigo)
-          if (ntfyData.event !== "message") return;
+      esGeral = new EventSource(`https://ntfy.sh/${PREFIXO_CANAL}TODOS/sse`);
+      esGeral.onmessage = processarEvento;
 
-          // Processa a nossa mensagem
-          const dados = JSON.parse(ntfyData.message);
-
-          // Segurança
-          if (dados.chave !== CHAVE_LOJA) return;
-
-          const meuUsuario = selectLogin.value;
-
-          // Regra de Destino
-          if (dados.para === 'TODOS' || dados.para === meuUsuario || dados.de === meuUsuario) {
-            
-            const eMinha = dados.de === meuUsuario;
-            const msgDiv = document.createElement('div');
-            msgDiv.className = `message ${eMinha ? 'me' : 'other'}`;
-            
-            const paraTexto = dados.para !== 'TODOS' ? ` ➔ ${dados.para}` : '';
-            msgDiv.innerHTML = `<div class="msg-author">${dados.de}${paraTexto}</div>${dados.texto}`;
-            
-            chatBox.appendChild(msgDiv);
-            chatBox.scrollTop = chatBox.scrollHeight;
-
-            if (!eMinha) {
-              tocarChime();
-              if (navigator.vibrate) navigator.vibrate([150, 80, 150]);
-
-              const banner = document.getElementById('banner');
-              banner.innerHTML = `<strong>${dados.de}</strong> (${dados.para}):<br>${dados.texto}`;
-              banner.style.display = 'block';
-              setTimeout(() => { banner.style.display = 'none'; }, 5000);
-            }
-          }
-        } catch (e) {
-          console.error("Erro ao processar mensagem", e);
-        }
-      };
-
-      // Se a conexão cair, tenta de novo sozinho em 3 segundos
-      eventSource.onerror = () => {
-        console.log("Conexão falhou. Tentando reconectar...");
-        eventSource.close();
-        setTimeout(conectarServidor, 3000);
-      };
+      esPessoal = new EventSource(`https://ntfy.sh/${PREFIXO_CANAL}${meuUsuario}/sse`);
+      esPessoal.onmessage = processarEvento;
     }
 
-    // Se o celular apagar a tela e voltar, força a reconexão
-    document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === 'visible' && somAtivo) {
-        conectarServidor();
-      }
-    });
+    function processarEvento(event) {
+      try {
+        const ntfyData = JSON.parse(event.data);
+        if (ntfyData.event !== "message") return;
 
-    // 3. ENVIO DE MENSAGENS
+        const dados = JSON.parse(ntfyData.message);
+        if (dados.chave !== CHAVE_LOJA) return;
+
+        const meuUsuario = selectLogin.value;
+        const eMinha = dados.de === meuUsuario;
+
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `message ${eMinha ? 'me' : 'other'}`;
+        
+        const paraTexto = dados.para !== 'TODOS' ? ` ➔ ${dados.para}` : '';
+        msgDiv.innerHTML = `<div class="msg-author">${dados.de}${paraTexto}</div>${dados.texto}`;
+        
+        chatBox.appendChild(msgDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        if (!eMinha) {
+          tocarChime();
+          if (navigator.vibrate) navigator.vibrate([150, 80, 150]);
+
+          const banner = document.getElementById('banner');
+          banner.innerHTML = `<strong>${dados.de}</strong> (${dados.para}):<br>${dados.texto}`;
+          banner.style.display = 'block';
+          setTimeout(() => { banner.style.display = 'none'; }, 5000);
+        }
+      } catch (e) {
+        console.error("Erro ao ler mensagem:", e);
+      }
+    }
+
     function enviarMensagem(texto) {
       if (!somAtivo) iniciarSistema();
       const remetente = selectLogin.value;
       const destino = selectDestino.value;
 
-      fetch(`https://ntfy.sh/${CANAL_LOJA}`, {
+      const canalDestino = `${PREFIXO_CANAL}${destino}`;
+
+      fetch(`https://ntfy.sh/${canalDestino}`, {
         method: 'POST',
+        headers: {
+          'Title': `${remetente} ➔ ${destino}`,
+          'Tags': 'speech_balloon'
+        },
         body: JSON.stringify({
           de: remetente,
           para: destino,
           texto: texto,
           chave: CHAVE_LOJA
         })
-      }).catch(err => console.error("Erro ao enviar:", err));
+      });
     }
 
     function enviarTextoChat() {
