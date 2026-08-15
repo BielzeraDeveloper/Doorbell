@@ -2,301 +2,195 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Comunicação - Loja</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Alerta Loja - App</title>
   <style>
     :root {
-      --bg: #f5f4f0; --card-bg: #ffffff; --accent: #1f1f1f;
-      --text: #222222; --subtext: #666666; --msg-me: #e3f2fd; --msg-other: #f0f0f0;
-      --error-bg: #ffebee; --error-text: #c62828;
+      --bg: #121212;
+      --card: #1e1e1e;
+      --accent: #d32f2f;
+      --accent-hover: #b71c1c;
+      --text: #ffffff;
+      --subtext: #a0a0a0;
     }
+
+    * { box-sizing: border-box; }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background-color: var(--bg); color: var(--text);
-      margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
     }
-    .container { width: 100%; max-width: 400px; }
-    .header { text-align: center; margin-bottom: 12px; }
-    .header h2 { font-weight: 300; letter-spacing: 2px; margin: 0 0 5px 0; }
-    
-    .btn-audio {
-      background: #2e7d32; color: white; border: none; padding: 12px;
-      border-radius: 8px; font-size: 13px; font-weight: bold; width: 100%;
-      margin-bottom: 12px; cursor: pointer; box-shadow: 0 4px 10px rgba(46,125,50,0.2);
-    }
-    .status-conectado { background: #e0e0e0; color: #666; box-shadow: none; pointer-events: none; }
 
-    .card {
-      background: var(--card-bg); border-radius: 16px; padding: 16px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.04); margin-bottom: 12px;
+    .app-card {
+      background: var(--card);
+      width: 100%;
+      max-width: 360px;
+      padding: 24px;
+      border-radius: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      text-align: center;
     }
-    label {
-      font-size: 11px; color: var(--subtext); text-transform: uppercase;
-      letter-spacing: 1px; display: block; margin-bottom: 6px;
-    }
-    select, input {
-      width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #e0e0e0;
-      background: #fafafa; font-size: 14px; box-sizing: border-box; outline: none;
-    }
-    .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
-    button {
-      background: var(--accent); color: white; border: none; padding: 12px;
-      border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer;
-    }
-    button:active { opacity: 0.8; }
-    
-    .chat-box {
-      height: 220px; overflow-y: auto; border: 1px solid #eaeaea;
-      border-radius: 8px; padding: 10px; background: #fafafa;
-      display: flex; flex-direction: column; gap: 8px;
-    }
-    .message { max-width: 80%; padding: 8px 12px; border-radius: 12px; font-size: 13px; line-height: 1.4; word-wrap: break-word; }
-    .message.me { align-self: flex-end; background: var(--msg-me); color: #0d47a1; border-bottom-right-radius: 2px; }
-    .message.other { align-self: flex-start; background: var(--msg-other); color: #333; border-bottom-left-radius: 2px; }
-    .message.system { align-self: center; background: #eee; color: #555; font-size: 11px; text-align: center; max-width: 95%; }
-    .message.error { align-self: center; background: var(--error-bg); color: var(--error-text); font-size: 11px; text-align: center; max-width: 95%; }
-    .msg-author { font-weight: bold; font-size: 10px; text-transform: uppercase; margin-bottom: 2px; opacity: 0.7; }
-    
-    .chat-input { display: flex; gap: 6px; margin-top: 8px; }
-    .chat-input input { flex: 1; }
-    .chat-input button { width: auto; padding: 0 16px; }
 
-    #banner {
-      display: none; position: fixed; top: 15px; left: 50%; transform: translateX(-50%);
-      background: #111; color: #fff; padding: 12px 20px; border-radius: 25px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.2); z-index: 1000; text-align: center;
-      font-size: 13px; width: 85%; max-width: 320px;
+    h2 { margin-top: 0; font-size: 20px; font-weight: 600; }
+    p { color: var(--subtext); font-size: 13px; margin-bottom: 20px; }
+
+    input, select {
+      width: 100%;
+      padding: 14px;
+      margin-bottom: 12px;
+      border-radius: 12px;
+      border: 1px solid #333;
+      background: #2a2a2a;
+      color: #fff;
+      font-size: 15px;
+      outline: none;
+      text-align: center;
+    }
+
+    .btn-main {
+      width: 100%;
+      padding: 16px;
+      border-radius: 14px;
+      border: none;
+      background: var(--accent);
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .btn-main:active {
+      transform: scale(0.98);
+      background: var(--accent-hover);
+    }
+
+    .btn-help-big {
+      height: 180px;
+      border-radius: 50%;
+      width: 180px;
+      margin: 20px auto;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 18px;
+      box-shadow: 0 0 25px rgba(211, 47, 47, 0.4);
+    }
+
+    .hidden { display: none !important; }
+    
+    .status-tag {
+      font-size: 11px;
+      color: #4caf50;
+      background: rgba(76, 175, 80, 0.1);
+      padding: 4px 10px;
+      border-radius: 20px;
+      display: inline-block;
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
 
-  <div id="banner"></div>
+  <!-- TELA 1: LOGIN SIMPLES (PIN) -->
+  <div id="screenLogin" class="app-card">
+    <h2>🔒 Acesso Restrito</h2>
+    <p>Digite o PIN de acesso da loja para entrar.</p>
+    
+    <input type="password" id="pinInput" placeholder="PIN da Loja (Ex: 1234)" maxlength="8">
+    <select id="userSelect">
+      <option value="Jhenifer">📱 Jhenifer</option>
+      <option value="Jeniffer">📱 Jeniffer</option>
+      <option value="Angelo">📱 Angelo</option>
+      <option value="Lia">📱 Lia</option>
+      <option value="Leo">📱 Leo</option>
+      <option value="Lu">📱 Lu</option>
+      <option value="Caixa">💳 Caixa</option>
+    </select>
 
-  <div class="container">
-    <div class="header">
-      <h2>LOJA CONECTADA</h2>
-    </div>
+    <button class="btn-main" onclick="autenticar()">ENTRAR NO APP</button>
+  </div>
 
-    <button class="btn-audio" id="btnAudio">🔔 CLIQUE AQUI PARA ATIVAR O SOM</button>
+  <!-- TELA 2: BOTÃO DE SOCORRO -->
+  <div id="screenApp" class="app-card hidden">
+    <h2>SISTEMA DE ALERTA</h2>
+    <span class="status-tag">🔒 Conexão Criptografada</span>
+    
+    <button class="btn-main btn-help-big" onclick="dispararAlerta()">
+      🚨<br>PRECISO DE AJUDA
+    </button>
 
-    <div class="card">
-      <label for="meuNome">Seu Aparelho / Usuário:</label>
-      <select id="meuNome" onchange="salvarLogin()">
-        <option value="NOTEBOOK">💻 Notebook</option>
-        <option value="COMPUTADOR">🖥️ Computador</option>
-        <option value="Jhenifer">📱 Jhenifer</option>
-        <option value="Jeniffer">📱 Jeniffer</option>
-        <option value="Angelo">📱 Angelo</option>
-        <option value="Lia">📱 Lia</option>
-        <option value="Leo">📱 Leo</option>
-        <option value="Lu">📱 Lu</option>
-        <option value="ESTOQUE">📦 Estoque</option>
-        <option value="CAIXA">💳 Caixa</option>
-      </select>
-    </div>
-
-    <div class="card">
-      <label for="destinatario">Enviar Notificação Para:</label>
-      <select id="destinatario">
-        <option value="TODOS">📢 TODOS OS APARELHOS</option>
-        <option value="NOTEBOOK">💻 Notebook</option>
-        <option value="COMPUTADOR">🖥️ Computador</option>
-        <option value="Jhenifer">📱 Jhenifer</option>
-        <option value="Jeniffer">📱 Jeniffer</option>
-        <option value="Angelo">📱 Angelo</option>
-        <option value="Lia">📱 Lia</option>
-        <option value="Leo">📱 Leo</option>
-        <option value="Lu">📱 Lu</option>
-        <option value="ESTOQUE">📦 Estoque</option>
-        <option value="CAIXA">💳 Caixa</option>
-      </select>
-
-      <div class="btn-grid">
-        <button onclick="enviarMensagem('⚡ Alerta: Preciso de ajuda!')">⚡ Pedir Ajuda</button>
-        <button onclick="enviarMensagem('📦 Alerta: Trazer peça no provador')">📦 Pedir Peça</button>
-      </div>
-    </div>
-
-    <div class="card">
-      <label>Chat Interno Privado</label>
-      <div class="chat-box" id="chatBox"></div>
-      
-      <div class="chat-input">
-        <input type="text" id="chatInput" placeholder="Digite e aperte Enter..." onkeypress="checarEnter(event)">
-        <button onclick="enviarTextoChat()">Enviar</button>
-      </div>
-    </div>
+    <p id="feedbackText">Pressione o botão acima para notificar a equipe em tempo real.</p>
   </div>
 
   <script>
-    // Se o canal estiver "congestionado", mude levemente este nome
-    const CANAL_LOJA = "loja-casual-chique-a8f92k19-privado";
-    const CHAVE_LOJA = "SenhaSecretaLoja2026";
+    // Configurações Globais
+    const PIN_CORRETO = "1234"; // Defina o PIN simples da loja aqui
+    const CHAVE_CRIPTOGRAFICA = "ChaveSuperSecretaLoja2026";
+    const CANAL_NTFY = "loja-casual-chique-a8f92k19-alerta";
 
-    const selectLogin = document.getElementById('meuNome');
-    const selectDestino = document.getElementById('destinatario');
-    const chatBox = document.getElementById('chatBox');
-    const btnAudio = document.getElementById('btnAudio');
+    let usuarioAtual = "";
 
-    if (localStorage.getItem('loja_usuario')) {
-      selectLogin.value = localStorage.getItem('loja_usuario');
-    }
-    function salvarLogin() {
-      localStorage.setItem('loja_usuario', selectLogin.value);
-    }
-
-    function logSistema(texto, tipo = 'system') {
-      const msgDiv = document.createElement('div');
-      msgDiv.className = `message ${tipo}`;
-      msgDiv.innerText = texto;
-      chatBox.appendChild(msgDiv);
-      chatBox.scrollTop = chatBox.scrollHeight;
-    }
-
-    // ÁUDIO
-    let audioCtx = null;
-    let somAtivo = false;
-
-    function iniciarAudio() {
-      if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function autenticar() {
+      const pinDigitado = document.getElementById('pinInput').value;
+      if (pinDigitado === PIN_CORRETO) {
+        usuarioAtual = document.getElementById('userSelect').value;
+        document.getElementById('screenLogin').classList.add('hidden');
+        document.getElementById('screenApp').classList.remove('hidden');
+      } else {
+        alert("PIN Incorreto! Acesso negado.");
       }
-      if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
-      }
-      somAtivo = true;
-      btnAudio.innerText = '✅ SOM ATIVADO';
-      btnAudio.classList.add('status-conectado');
     }
 
-    btnAudio.addEventListener('click', iniciarAudio);
-    btnAudio.addEventListener('touchstart', iniciarAudio, {passive: true});
+    // Função simples para criptografar texto antes do envio (Base64 + Cifra Básica)
+    function criptografar(texto, chave) {
+      let resultado = "";
+      for (let i = 0; i < texto.length; i++) {
+        let charCode = texto.charCodeAt(i) ^ chave.charCodeAt(i % chave.length);
+        resultado += String.fromCharCode(charCode);
+      }
+      return btoa(resultado); // Converte para Base64
+    }
 
-    function tocarChime() {
-      if (!somAtivo || !audioCtx) return;
+    async function dispararAlerta() {
+      const feedback = document.getElementById('feedbackText');
+      feedback.innerText = "Enviando alerta criptografado...";
+
+      const mensagemPura = `${usuarioAtual} precisa de ajuda urgente no salão!`;
+      const mensagemCriptografada = criptografar(mensagemPura, CHAVE_CRIPTOGRAFICA);
+
       try {
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        function tocarNota(freq, inicio, duracao) {
-          const osc = audioCtx.createOscillator();
-          const gain = audioCtx.createGain();
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(freq, audioCtx.currentTime + inicio);
-          gain.gain.setValueAtTime(0.3, audioCtx.currentTime + inicio);
-          gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + inicio + duracao);
-          osc.connect(gain);
-          gain.connect(audioCtx.destination);
-          osc.start(audioCtx.currentTime + inicio);
-          osc.stop(audioCtx.currentTime + inicio + duracao);
-        }
-        tocarNota(783.99, 0.0, 0.35);
-        tocarNota(523.25, 0.2, 0.5);
-      } catch (e) {
-        console.error("Erro áudio:", e);
+        await fetch(`https://ntfy.sh/${CANAL_NTFY}`, {
+          method: 'POST',
+          headers: {
+            'Title': '🚨 PEDIDO DE AJUDA',
+            'Priority': '5',
+            'Tags': 'warning,alert'
+          },
+          body: JSON.stringify({
+            remetente: usuarioAtual,
+            payload: mensagemCriptografada
+          })
+        });
+
+        feedback.innerText = "✅ Alerta enviado para todos os aparelhos!";
+        if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+
+        setTimeout(() => {
+          feedback.innerText = "Pressione o botão acima para notificar a equipe em tempo real.";
+        }, 4000);
+
+      } catch (err) {
+        feedback.innerText = "❌ Falha ao enviar alerta. Verifique a internet.";
       }
     }
-
-    // CONEXÃO SSE
-    let eventSource = null;
-
-    function conectarServidor() {
-      if (eventSource) eventSource.close();
-
-      logSistema("Conectando ao servidor...");
-      eventSource = new EventSource(`https://ntfy.sh/${CANAL_LOJA}/sse`);
-
-      eventSource.onopen = () => {
-        logSistema("🟢 Conectado e pronto para uso!");
-      };
-
-      eventSource.onmessage = (event) => {
-        try {
-          const ntfyData = JSON.parse(event.data);
-          if (ntfyData.event !== "message") return;
-
-          let dados;
-          try {
-            dados = JSON.parse(ntfyData.message);
-          } catch(e) {
-            return; // Ignora mensagens que não sejam do nosso formato JSON
-          }
-
-          if (dados.chave !== CHAVE_LOJA) return;
-
-          const meuUsuario = selectLogin.value;
-
-          if (dados.para === 'TODOS' || dados.para === meuUsuario || dados.de === meuUsuario) {
-            const eMinha = dados.de === meuUsuario;
-            const msgDiv = document.createElement('div');
-            msgDiv.className = `message ${eMinha ? 'me' : 'other'}`;
-            
-            const paraTexto = dados.para !== 'TODOS' ? ` ➔ ${dados.para}` : '';
-            msgDiv.innerHTML = `<div class="msg-author">${dados.de}${paraTexto}</div>${dados.texto}`;
-            
-            chatBox.appendChild(msgDiv);
-            chatBox.scrollTop = chatBox.scrollHeight;
-
-            if (!eMinha) {
-              tocarChime();
-              if (navigator.vibrate) navigator.vibrate([150, 80, 150]);
-
-              const banner = document.getElementById('banner');
-              banner.innerHTML = `<strong>${dados.de}</strong> (${dados.para}):<br>${dados.texto}`;
-              banner.style.display = 'block';
-              setTimeout(() => { banner.style.display = 'none'; }, 5000);
-            }
-          }
-        } catch (e) {
-          console.error("Erro ao ler dados:", e);
-        }
-      };
-
-      eventSource.onerror = () => {
-        logSistema("⚠️ Conexão oscilando... Reconectando...", "error");
-      };
-    }
-
-    // ENVIO DE MENSAGENS
-    function enviarMensagem(texto) {
-      const remetente = selectLogin.value;
-      const destino = selectDestino.value;
-
-      const payload = JSON.stringify({
-        de: remetente,
-        para: destino,
-        texto: texto,
-        chave: CHAVE_LOJA
-      });
-
-      fetch(`https://ntfy.sh/${CANAL_LOJA}`, {
-        method: 'POST',
-        body: payload
-      })
-      .then(res => {
-        if (!res.ok) {
-          logSistema("❌ Erro ao enviar mensagem no servidor", "error");
-        }
-      })
-      .catch(err => {
-        logSistema("❌ Erro de rede ao tentar enviar", "error");
-        console.error(err);
-      });
-    }
-
-    function enviarTextoChat() {
-      const input = document.getElementById('chatInput');
-      if (input.value.trim() !== '') {
-        enviarMensagem(input.value);
-        input.value = '';
-      }
-    }
-
-    function checarEnter(e) {
-      if (e.key === 'Enter') enviarTextoChat();
-    }
-
-    // Inicialização imediata
-    conectarServidor();
   </script>
 </body>
 </html>
