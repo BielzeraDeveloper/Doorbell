@@ -152,15 +152,17 @@
 </head>
 <body>
 
-  <!-- LOGIN -->
+  <!-- TELA DE LOGIN -->
   <div id="screenLogin" class="app-card">
     <h2>🔒 Login da Loja</h2>
-    <p>Insira o PIN para acessar o canal criptografado.</p>
+    <p>Insira o PIN para acessar.</p>
     
     <input type="password" id="pinInput" placeholder="PIN da Loja" maxlength="8">
     
-    <label for="userSelect">Seu Usuário:</label>
+    <label for="userSelect">Seu Usuário / Aparelho:</label>
     <select id="userSelect">
+      <option value="NOTEBOOK">💻 Notebook</option>
+      <option value="COMPUTADOR">🖥️ Computador</option>
       <option value="Jhenifer">📱 Jhenifer</option>
       <option value="Jeniffer">📱 Jeniffer</option>
       <option value="Angelo">📱 Angelo</option>
@@ -177,16 +179,18 @@
   <!-- PAINEL PRINCIPAL -->
   <div id="screenApp" class="app-card hidden">
     <div style="text-align: center;">
-      <span class="badge">🔐 Criptografia Ativa</span>
+      <span class="badge">🔔 Alertas & Som Ativos</span>
     </div>
 
-    <!-- SOCORRO -->
+    <!-- BOTÃO DE AJUDA -->
     <button class="btn-help" onclick="enviarAlertaRapido()">⚡ PEDIR AJUDA URGENTE</button>
 
     <!-- DESTINATÁRIO -->
-    <label for="destinatarioSelect">Enviar para:</label>
+    <label for="destinatarioSelect">Enviar Notificação Para:</label>
     <select id="destinatarioSelect">
       <option value="TODOS">📢 TODOS OS USUÁRIOS</option>
+      <option value="NOTEBOOK">💻 Notebook</option>
+      <option value="COMPUTADOR">🖥️ Computador</option>
       <option value="Jhenifer">📱 Jhenifer</option>
       <option value="Jeniffer">📱 Jeniffer</option>
       <option value="Angelo">📱 Angelo</option>
@@ -201,12 +205,12 @@
     <div class="chat-box" id="chatBox">
       <div class="message other">
         <div class="msg-header">SISTEMA</div>
-        Conectado com segurança.
+        Conectado na nova porta privada.
       </div>
     </div>
 
     <div class="chat-input-group">
-      <input type="text" id="msgInput" placeholder="Mensagem criptografada..." onkeypress="checarEnter(event)">
+      <input type="text" id="msgInput" placeholder="Digite uma mensagem..." onkeypress="checarEnter(event)">
       <button class="btn-main" onclick="enviarMensagemCustom()">Enviar</button>
     </div>
   </div>
@@ -214,10 +218,46 @@
   <script>
     const PIN_CORRETO = "1234";
     const CHAVE_SECRETA = "ChaveCriptoLoja2026";
-    const CANAL_BASE = "loja-casual-chique-a8f92k19-v2";
+    // Canal atualizado para evitar conflito com mensagens antigas
+    const CANAL_BASE = "loja-casual-chique-v3-privado";
 
     let usuarioAtual = "";
     let eventSource = null;
+    let audioCtx = null;
+
+    function inicializarAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function tocarSomNotificacao() {
+      try {
+        inicializarAudio();
+        if (!audioCtx) return;
+
+        function tocarNota(freq, inicio, duracao) {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, audioCtx.currentTime + inicio);
+          gain.gain.setValueAtTime(0.3, audioCtx.currentTime + inicio);
+          gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + inicio + duracao);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(audioCtx.currentTime + inicio);
+          osc.stop(audioCtx.currentTime + inicio + duracao);
+        }
+
+        tocarNota(783.99, 0.0, 0.35);
+        tocarNota(523.25, 0.2, 0.5);
+      } catch (e) {
+        console.error("Erro ao tocar som:", e);
+      }
+    }
 
     function autenticar() {
       const pin = document.getElementById('pinInput').value;
@@ -225,13 +265,13 @@
         usuarioAtual = document.getElementById('userSelect').value;
         document.getElementById('screenLogin').classList.add('hidden');
         document.getElementById('screenApp').classList.remove('hidden');
+        inicializarAudio();
         iniciarConexaoSSE();
       } else {
         alert("PIN incorreto.");
       }
     }
 
-    // Criptografia e Descriptografia Simétrica (XOR + Base64)
     function criptografar(texto) {
       let res = "";
       for (let i = 0; i < texto.length; i++) {
@@ -265,7 +305,6 @@
 
       await fetch(`https://ntfy.sh/${CANAL_BASE}`, {
         method: 'POST',
-        headers: { 'Title': 'Nova Mensagem' },
         body: payloadCriptografado
       });
     }
@@ -300,16 +339,16 @@
           if (ntfyData.event !== "message") return;
 
           const pacoteDecifrado = descriptografar(ntfyData.message);
-          if (!pacoteDecifrado) return; // Mensagem inválida ou de outra chave
+          if (!pacoteDecifrado) return;
 
           const dados = JSON.parse(pacoteDecifrado);
 
-          // Filtragem de destinatário: exibe se for para TODOS, para o próprio usuário ou enviado por ele
+          // Filtro: exibe apenas se for destinado a TODOS, ao usuário atual, ou enviado por ele
           if (dados.para === "TODOS" || dados.para === usuarioAtual || dados.de === usuarioAtual) {
             adicionarMensagemChat(dados);
           }
         } catch (e) {
-          // Ignora dados corrompidos
+          // Ignora mensagens malformadas
         }
       };
     }
@@ -327,8 +366,10 @@
       chatBox.appendChild(div);
       chatBox.scrollTop = chatBox.scrollHeight;
 
-      if (!eMinha && navigator.vibrate) {
-        navigator.vibrate([100, 50, 100]);
+      // Somente toca o alarme se a mensagem NÃO for enviada pelo próprio usuário
+      if (!eMinha) {
+        tocarSomNotificacao();
+        if (navigator.vibrate) navigator.vibrate([150, 100, 150]);
       }
     }
   </script>
