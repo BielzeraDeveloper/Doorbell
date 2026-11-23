@@ -277,6 +277,54 @@ th {
   margin-bottom:15px;
   color:#a34838;
 }
+
+/* NOTIFICAÇÕES */
+.notification-controls {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-left:auto;
+  margin-right:22px;
+}
+.notification-controls button {
+  border:1px solid var(--border);
+  background:#fff;
+  color:var(--green);
+  border-radius:8px;
+  padding:8px 10px;
+  font-size:12px;
+  font-weight:700;
+}
+.notification-controls button:hover { background:var(--bg); }
+#notificationToast {
+  position:fixed;
+  z-index:9999;
+  top:92px;
+  right:22px;
+  width:min(390px,calc(100vw - 28px));
+  padding:17px 18px;
+  border-radius:12px;
+  background:#173c32;
+  color:white;
+  box-shadow:0 12px 35px #102b2450;
+  border-left:5px solid #b9d7bd;
+  opacity:0;
+  transform:translateY(-10px);
+  pointer-events:none;
+  transition:opacity .2s ease,transform .2s ease;
+}
+#notificationToast.show {
+  opacity:1;
+  transform:translateY(0);
+}
+#notificationToast strong { display:block; margin-bottom:6px; }
+#notificationToast p {
+  margin:0;
+  color:#e0ebe3;
+  font-size:13px;
+  line-height:1.45;
+  overflow-wrap:anywhere;
+}
 @media(max-width:850px) {
   .sidebar { width:205px; }
   .content { padding:22px; }
@@ -299,7 +347,10 @@ th {
     font-size:12px;
   }
   .sidebar-bottom { display:none; }
-  .topbar { height:65px; padding:0 17px; }
+  .topbar { height:auto; min-height:65px; padding:10px 12px; gap:8px; flex-wrap:wrap; }
+  .notification-controls { margin:0; gap:5px; }
+  .notification-controls button { padding:7px 8px; font-size:10px; }
+  .user-info { font-size:11px; }
   .content { padding:19px 14px; }
   .cards { grid-template-columns:1fr 1fr; gap:10px; }
   .card,.panel { padding:16px; }
@@ -339,6 +390,11 @@ th {
 
 <!-- APLICAÇÃO -->
 
+<div id="notificationToast" role="status" aria-live="polite">
+  <strong id="notificationTitle">Novo chamado</strong>
+  <p id="notificationText"></p>
+</div>
+
 <div class="app hidden" id="app">
 
   <aside class="sidebar">
@@ -363,6 +419,10 @@ th {
   <main class="main">
     <header class="topbar">
       <div class="topbar-title" id="topbarTitle">Dashboard</div>
+      <div class="notification-controls">
+        <button type="button" id="soundToggle" aria-pressed="true" title="Preferência de som salva neste dispositivo">🔔 Som ligado</button>
+        <button type="button" id="testSoundButton">Testar som</button>
+      </div>
       <div class="user-info">
         <strong id="topUser">Usuário</strong><br>
         <span id="topRole">Equipe</span>
@@ -511,6 +571,15 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 let currentUser = null;
 let currentProfile = null;
 let callsCache = [];
+let callsChannel = null;
+let audioContext = null;
+let toastTimer = null;
+
+// Som começa ligado em celulares e desligado em computadores.
+// A preferência fica salva separadamente neste navegador/dispositivo.
+const mobileDevice = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+let soundEnabled = localStorage.getItem("raizesConectaSound");
+soundEnabled = soundEnabled === null ? mobileDevice : soundEnabled === "true";
 
 // ELEMENTOS
 
@@ -520,6 +589,123 @@ function notify(message, success = false) {
   $("globalMessage").textContent = message;
   $("globalMessage").style.color = success ? "#26734d" : "#a34838";
 }
+
+function updateSoundButton() {
+  const button = $("soundToggle");
+  if (!button) return;
+  button.textContent = soundEnabled ? "🔔 Som ligado" : "🔕 Som desligado";
+  button.setAttribute("aria-pressed", String(soundEnabled));
+}
+
+async function prepareAudio() {
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) return false;
+  try {
+    if (!audioContext) audioContext = new AudioContextClass();
+    if (audioContext.state === "suspended") await audioContext.resume();
+    return audioContext.state === "running";
+  } catch (error) {
+    console.warn("Áudio indisponível:", error);
+    return false;
+  }
+}
+
+async function playNotificationSound() {
+  if (!soundEnabled) return;
+  const ready = await prepareAudio();
+  if (!ready || !audioContext) return;
+
+  // Dois tons curtos e suaves, gerados pelo próprio navegador.
+  const now = audioContext.currentTime;
+  [660, 880].forEach((frequency, index) => {
+    const oscillator = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+    const start = now + index * 0.17;
+    oscillator.type = "sine";
+    oscillator.frequency.setValueAtTime(frequency, start);
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.exponentialRampToValueAtTime(0.12, start + 0.025);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.14);
+    oscillator.connect(gain);
+    gain.connect(audioContext.destination);
+    oscillator.start(start);
+    oscillator.stop(start + 0.15);
+  });
+}
+
+function showCallNotification(call) {
+  $("notificationTitle").textContent =
+    "Novo chamado para " + roleName(call.destinatario);
+  $("notificationText").textContent = call.mensagem;
+  $("notificationToast").classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    $("notificationToast").classList.remove("show");
+  }, 6500);
+  playNotificationSound();
+}
+
+function subscribeToCalls() {
+  if (callsChannel) {
+    supabase.removeChannel(callsChannel);
+    callsChannel = null;
+  }
+  if (!currentUser || !currentProfile) return;
+
+  callsChannel = supabase
+    .channel("raizes-conecta-chamados-" + currentUser.id)
+    .on("postgres_changes", {
+      event: "INSERT",
+      schema: "public",
+      table: "chamados"
+    }, payload => {
+      const call = payload.new;
+      const isForThisUser =
+        currentProfile.funcao === "admin" ||
+        call.destinatario === currentProfile.funcao;
+      const isFromAnotherUser = call.criado_por !== currentUser.id;
+
+      if (isForThisUser && isFromAnotherUser) {
+        showCallNotification(call);
+      }
+      loadCalls();
+    })
+    .on("postgres_changes", {
+      event: "UPDATE",
+      schema: "public",
+      table: "chamados"
+    }, () => {
+      loadCalls();
+    })
+    .subscribe(status => {
+      if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+        console.warn("Não foi possível conectar ao canal de chamados:", status);
+      }
+    });
+}
+
+$("soundToggle").addEventListener("click", async () => {
+  soundEnabled = !soundEnabled;
+  localStorage.setItem("raizesConectaSound", String(soundEnabled));
+  updateSoundButton();
+  if (soundEnabled) await prepareAudio();
+});
+
+$("testSoundButton").addEventListener("click", async () => {
+  if (!soundEnabled) {
+    notify("Ative o som das notificações antes de testar.");
+    return;
+  }
+  const ready = await prepareAudio();
+  if (!ready) {
+    notify("O navegador não liberou o áudio. Interaja com a página e tente novamente.");
+    return;
+  }
+  playNotificationSound();
+  notify("Teste de som executado.", true);
+});
+
+updateSoundButton();
 
 function escapeHTML(value) {
   return String(value ?? "").replace(/[&<>"']/g, char => ({
@@ -617,6 +803,10 @@ async function checkSession() {
 }
 
 function showLogin() {
+  if (callsChannel) {
+    supabase.removeChannel(callsChannel);
+    callsChannel = null;
+  }
   currentUser = null;
   currentProfile = null;
 
@@ -653,6 +843,7 @@ async function loadProfile(user) {
   });
 
   $("destination").disabled = false;
+  subscribeToCalls();
 
   if (profile.funcao !== "admin") {
     $("destination").value =
@@ -664,6 +855,8 @@ async function loadProfile(user) {
 
 $("loginForm").addEventListener("submit", async event => {
   event.preventDefault();
+  // O clique em Entrar permite ao navegador liberar o áudio para esta sessão.
+  if (soundEnabled) await prepareAudio();
 
   const button = $("loginButton");
   button.disabled = true;
