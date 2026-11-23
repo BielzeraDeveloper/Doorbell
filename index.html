@@ -1,153 +1,53 @@
 
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#173c32" />
-  <title>Raízes Conecta</title>
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: Inter, Arial, sans-serif;
-      background: #f4f5f1;
-      color: #26372f;
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
+import { createClient } from
+  "https://esm.sh/@supabase/supabase-js@2";
+
+const SUPABASE_URL =
+  "https://chgoviyljsloplqejeib.supabase.co";
+
+const SUPABASE_KEY =
+  "COLE_AQUI_SUA_CHAVE_PUBLISHABLE_COMPLETA";
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const status = document.getElementById("status");
+const form = document.getElementById("loginForm");
+
+form.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  status.textContent = "Verificando acesso...";
+
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (error) {
+      status.textContent = "Não foi possível entrar. Confira seus dados.";
+      return;
     }
-    .login {
-      width: min(420px, calc(100% - 32px));
-      background: white;
-      padding: 40px;
-      border-radius: 20px;
-      box-shadow: 0 12px 45px #193b3012;
+
+    const { data: perfil, error: perfilError } = await supabase
+      .from("perfis")
+      .select("nome, funcao, ativo")
+      .eq("id", data.user.id)
+      .single();
+
+    if (perfilError || !perfil || !perfil.ativo) {
+      await supabase.auth.signOut();
+      status.textContent = "Usuário sem acesso autorizado.";
+      return;
     }
-    .brand {
-      color: #173c32;
-      font-size: 27px;
-      font-weight: 800;
-      letter-spacing: 1px;
-      margin-bottom: 8px;
-    }
-    .subtitle {
-      color: #7b887f;
-      margin: 0 0 30px;
-      font-size: 14px;
-    }
-    label {
-      display: block;
-      font-size: 13px;
-      font-weight: 700;
-      margin: 18px 0 8px;
-    }
-    input {
-      width: 100%;
-      padding: 14px;
-      border: 1px solid #dce3dc;
-      border-radius: 10px;
-      font-size: 15px;
-      outline: none;
-    }
-    input:focus { border-color: #477b63; }
-    button {
-      width: 100%;
-      border: 0;
-      background: #173c32;
-      color: white;
-      padding: 15px;
-      border-radius: 10px;
-      font-size: 15px;
-      font-weight: 700;
-      cursor: pointer;
-      margin-top: 25px;
-    }
-    button:hover { background: #245343; }
-    #status {
-      min-height: 20px;
-      font-size: 13px;
-      color: #a34838;
-      margin-top: 16px;
-    }
-    .footer {
-      text-align: center;
-      color: #98a198;
-      font-size: 11px;
-      margin-top: 30px;
-    }
-  </style>
-</head>
-<body>
-  <main class="login">
-    <div class="brand">RAÍZES</div>
-    <p class="subtitle">Conecta · Comunicação entre equipes</p>
 
-    <form id="loginForm">
-      <label for="email">E-mail</label>
-      <input id="email" type="email" placeholder="seu@email.com" required />
+    status.textContent = `Bem-vindo, ${perfil.nome}!`;
 
-      <label for="password">Senha</label>
-      <input id="password" type="password" placeholder="Sua senha" required />
-
-      <button type="submit">Entrar</button>
-      <div id="status" role="status"></div>
-    </form>
-
-    <div class="footer">RAÍZES CONECTA · ACESSO RESTRITO</div>
-  </main>
-
-  <script type="module">
-    import { createClient } from
-      "https://esm.sh/@supabase/supabase-js@2";
-
-    const SUPABASE_URL = "COLOQUE_A_URL_DO_SUPABASE";
-    const SUPABASE_KEY = "COLOQUE_A_CHAVE_PUBLICA";
-
-    const status = document.getElementById("status");
-
-    const configurado =
-      !SUPABASE_URL.startsWith("https://chgoviyljsloplqejeib.supabase.co") &&
-      !SUPABASE_KEY.startsWith("sb_publishable_HFiA8vLI0sJF4vWLuJ4nsQ_kH9-pLQm");
-
-    if (!configurado) {
-      status.textContent = "Configuração do sistema pendente.";
-    } else {
-      const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-
-      document.getElementById("loginForm")
-        .addEventListener("submit", async (event) => {
-          event.preventDefault();
-          status.textContent = "Verificando acesso...";
-
-          const email = document.getElementById("email").value.trim();
-          const password = document.getElementById("password").value;
-
-          const { data, error } = await supabase.auth.signInWithPassword({
-            email,
-            password
-          });
-
-          if (error) {
-            status.textContent = "Não foi possível entrar. Confira seus dados.";
-            return;
-          }
-
-          const { data: perfil, error: perfilError } = await supabase
-            .from("perfis")
-            .select("nome, funcao, ativo")
-            .eq("id", data.user.id)
-            .single();
-
-          if (perfilError || !perfil || !perfil.ativo) {
-            await supabase.auth.signOut();
-            status.textContent = "Usuário sem acesso autorizado.";
-            return;
-          }
-
-          status.textContent = "Login realizado. Painel em preparação.";
-        });
-    }
-  </script>
-</body>
-</html>
+  } catch (error) {
+    console.error(error);
+    status.textContent = "Erro de conexão. Tente novamente.";
+  }
+});
