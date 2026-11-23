@@ -2,224 +2,966 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#173c32" />
-  <title>Raízes Conecta</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#173c32">
+<title>Raízes Conecta</title>
 
-  <style>
-    * { box-sizing: border-box; }
+<style>
+:root {
+  --green:#173c32;
+  --green2:#245343;
+  --bg:#f4f5f1;
+  --white:#fff;
+  --text:#26372f;
+  --muted:#87938a;
+  --border:#e8ece7;
+}
+* { box-sizing:border-box; }
+body {
+  margin:0;
+  font-family:Inter,Arial,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+button,input,select,textarea { font:inherit; }
+button { cursor:pointer; }
+.hidden { display:none!important; }
 
-    body {
-      margin: 0;
-      font-family: Inter, Arial, sans-serif;
-      background: #f4f5f1;
-      color: #26372f;
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      padding: 20px;
-    }
+/* LOGIN */
 
-    .login {
-      width: min(420px, 100%);
-      background: white;
-      padding: 40px;
-      border-radius: 20px;
-      box-shadow: 0 12px 45px #193b3012;
-    }
+.login-screen {
+  min-height:100vh;
+  display:grid;
+  place-items:center;
+  padding:20px;
+}
+.login-card {
+  width:min(420px,100%);
+  background:white;
+  padding:40px;
+  border-radius:20px;
+  box-shadow:0 12px 45px #193b3012;
+}
+.brand {
+  color:var(--green);
+  font-size:27px;
+  font-weight:800;
+  letter-spacing:1px;
+}
+.subtitle {
+  color:var(--muted);
+  font-size:14px;
+  margin:8px 0 30px;
+}
+label {
+  display:block;
+  font-size:13px;
+  font-weight:700;
+  margin:16px 0 8px;
+}
+input,select,textarea {
+  width:100%;
+  padding:13px;
+  border:1px solid #dce3dc;
+  border-radius:9px;
+  outline:none;
+  background:white;
+  color:var(--text);
+}
+input:focus,select:focus,textarea:focus {
+  border-color:#477b63;
+}
+textarea { resize:vertical; min-height:90px; }
+.primary {
+  border:0;
+  background:var(--green);
+  color:white;
+  padding:13px 18px;
+  border-radius:9px;
+  font-weight:700;
+}
+.primary:hover { background:var(--green2); }
+.primary:disabled { opacity:.6; cursor:wait; }
+.full { width:100%; margin-top:22px; }
+.message {
+  min-height:20px;
+  margin-top:15px;
+  font-size:13px;
+  color:#a34838;
+}
+.success { color:#26734d; }
 
-    .brand {
-      color: #173c32;
-      font-size: 27px;
-      font-weight: 800;
-      letter-spacing: 1px;
-      margin-bottom: 8px;
-    }
+/* APP */
 
-    .subtitle {
-      color: #7b887f;
-      margin: 0 0 30px;
-      font-size: 14px;
-    }
-
-    label {
-      display: block;
-      font-size: 13px;
-      font-weight: 700;
-      margin: 18px 0 8px;
-    }
-
-    input {
-      width: 100%;
-      padding: 14px;
-      border: 1px solid #dce3dc;
-      border-radius: 10px;
-      font-size: 15px;
-      outline: none;
-    }
-
-    input:focus { border-color: #477b63; }
-
-    button {
-      width: 100%;
-      border: 0;
-      background: #173c32;
-      color: white;
-      padding: 15px;
-      border-radius: 10px;
-      font-size: 15px;
-      font-weight: 700;
-      cursor: pointer;
-      margin-top: 25px;
-    }
-
-    button:hover { background: #245343; }
-    button:disabled { opacity: .6; cursor: wait; }
-
-    #status {
-      min-height: 20px;
-      font-size: 13px;
-      color: #a34838;
-      margin-top: 16px;
-      line-height: 1.5;
-    }
-
-    .footer {
-      text-align: center;
-      color: #98a198;
-      font-size: 11px;
-      margin-top: 30px;
-    }
-  </style>
+.app {
+  min-height:100vh;
+  display:flex;
+}
+.sidebar {
+  width:250px;
+  background:var(--green);
+  color:white;
+  padding:28px 18px;
+  display:flex;
+  flex-direction:column;
+  flex-shrink:0;
+}
+.sidebar-brand {
+  padding:0 12px 35px;
+}
+.sidebar-brand strong {
+  font-size:23px;
+  letter-spacing:1px;
+}
+.sidebar-brand small {
+  display:block;
+  color:#b6c9be;
+  margin-top:5px;
+}
+.nav-label {
+  color:#a8beb2;
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:1.5px;
+  padding:12px;
+}
+.nav-btn {
+  width:100%;
+  border:0;
+  background:transparent;
+  color:#d8e5dc;
+  text-align:left;
+  padding:13px 12px;
+  border-radius:9px;
+  margin:3px 0;
+  font-size:14px;
+}
+.nav-btn:hover,.nav-btn.active {
+  background:#ffffff19;
+  color:white;
+}
+.sidebar-bottom {
+  margin-top:auto;
+  padding:12px;
+  color:#b6c9be;
+  font-size:12px;
+}
+.main {
+  flex:1;
+  min-width:0;
+}
+.topbar {
+  height:76px;
+  background:white;
+  border-bottom:1px solid var(--border);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:0 35px;
+}
+.topbar-title {
+  font-size:18px;
+  font-weight:750;
+}
+.user-info {
+  font-size:13px;
+  color:var(--muted);
+  text-align:right;
+}
+.content {
+  padding:32px;
+  max-width:1500px;
+  margin:auto;
+}
+.page-title {
+  font-size:24px;
+  margin:0 0 8px;
+}
+.page-description {
+  color:var(--muted);
+  font-size:14px;
+  margin:0 0 27px;
+}
+.cards {
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:18px;
+  margin-bottom:28px;
+}
+.card,.panel {
+  background:white;
+  border:1px solid var(--border);
+  border-radius:13px;
+  padding:22px;
+}
+.card-label {
+  color:var(--muted);
+  font-size:13px;
+}
+.card-number {
+  font-size:30px;
+  font-weight:800;
+  margin-top:12px;
+  color:var(--green);
+}
+.panel-title {
+  font-size:16px;
+  font-weight:750;
+  margin-bottom:18px;
+}
+.grid-two {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:18px;
+}
+.form-grid {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:0 15px;
+}
+.field-full { grid-column:1/-1; }
+.table-wrap { overflow-x:auto; }
+table {
+  width:100%;
+  border-collapse:collapse;
+  font-size:13px;
+}
+th,td {
+  padding:14px 10px;
+  text-align:left;
+  border-bottom:1px solid var(--border);
+}
+th {
+  color:var(--muted);
+  font-weight:650;
+}
+.empty {
+  color:var(--muted);
+  padding:25px 0;
+  font-size:13px;
+}
+.status {
+  display:inline-block;
+  border-radius:20px;
+  padding:6px 10px;
+  background:#f0f2ee;
+  font-size:11px;
+  font-weight:700;
+}
+.status.pendente { color:#98702a; background:#fff6df; }
+.status.em_atendimento { color:#356d9a; background:#eaf3fb; }
+.status.concluido { color:#26734d; background:#e7f5eb; }
+.small-btn {
+  padding:8px 11px;
+  border:1px solid var(--border);
+  background:white;
+  border-radius:7px;
+  color:var(--green);
+  font-size:12px;
+  font-weight:700;
+}
+.small-btn:hover { background:var(--bg); }
+.section { display:none; }
+.section.active { display:block; }
+.logout {
+  color:#d8e5dc;
+  background:transparent;
+  border:0;
+  padding:12px;
+  text-align:left;
+  font-size:13px;
+}
+#globalMessage {
+  font-size:13px;
+  margin-bottom:15px;
+  color:#a34838;
+}
+@media(max-width:850px) {
+  .sidebar { width:205px; }
+  .content { padding:22px; }
+  .cards { grid-template-columns:1fr 1fr; }
+}
+@media(max-width:600px) {
+  .app { display:block; }
+  .sidebar {
+    width:100%;
+    padding:12px;
+    display:block;
+  }
+  .sidebar-brand { padding:8px 10px 15px; }
+  .sidebar-brand strong { font-size:19px; }
+  .nav-label { display:none; }
+  .nav-btn {
+    width:auto;
+    display:inline-block;
+    padding:10px;
+    font-size:12px;
+  }
+  .sidebar-bottom { display:none; }
+  .topbar { height:65px; padding:0 17px; }
+  .content { padding:19px 14px; }
+  .cards { grid-template-columns:1fr 1fr; gap:10px; }
+  .card,.panel { padding:16px; }
+  .card-number { font-size:25px; }
+  .grid-two { grid-template-columns:1fr; }
+  .form-grid { grid-template-columns:1fr; }
+  .field-full { grid-column:auto; }
+}
+</style>
 </head>
 
 <body>
-  <main class="login">
+
+<!-- LOGIN -->
+
+<section class="login-screen" id="loginScreen">
+  <div class="login-card">
     <div class="brand">RAÍZES</div>
     <p class="subtitle">Conecta · Comunicação entre equipes</p>
 
     <form id="loginForm">
       <label for="email">E-mail</label>
-      <input
-        id="email"
-        type="email"
-        placeholder="seu@email.com"
-        autocomplete="username"
-        required
-      />
+      <input id="email" type="email" autocomplete="username" required>
 
       <label for="password">Senha</label>
-      <input
-        id="password"
-        type="password"
-        placeholder="Sua senha"
-        autocomplete="current-password"
-        required
-      />
+      <input id="password" type="password" autocomplete="current-password" required>
 
-      <button id="loginButton" type="submit">Entrar</button>
-      <div id="status" role="status" aria-live="polite"></div>
+      <button class="primary full" id="loginButton">Entrar</button>
+      <div class="message" id="loginMessage"></div>
     </form>
 
-    <div class="footer">
+    <div class="subtitle" style="margin:25px 0 0;text-align:center;font-size:11px">
       RAÍZES CONECTA · ACESSO RESTRITO
     </div>
+  </div>
+</section>
+
+<!-- APLICAÇÃO -->
+
+<div class="app hidden" id="app">
+
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <strong>RAÍZES</strong>
+      <small>CONecta · Comunicação interna</small>
+    </div>
+
+    <div class="nav-label">MENU PRINCIPAL</div>
+
+    <button class="nav-btn active" data-page="dashboard">⌂ &nbsp; Dashboard</button>
+    <button class="nav-btn" data-page="chamados">▤ &nbsp; Chamados</button>
+    <button class="nav-btn" data-page="novo">＋ &nbsp; Novo chamado</button>
+    <button class="nav-btn admin-only" data-page="funcionarios">♙ &nbsp; Funcionários</button>
+
+    <div class="sidebar-bottom">
+      <div id="sidebarUser">Usuário</div>
+      <button class="logout" id="logoutButton">↪ Sair da conta</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-title" id="topbarTitle">Dashboard</div>
+      <div class="user-info">
+        <strong id="topUser">Usuário</strong><br>
+        <span id="topRole">Equipe</span>
+      </div>
+    </header>
+
+    <div class="content">
+      <div id="globalMessage"></div>
+
+      <!-- DASHBOARD -->
+
+      <section class="section active" id="page-dashboard">
+        <h1 class="page-title">Visão geral</h1>
+        <p class="page-description">Acompanhe a comunicação da equipe Raízes.</p>
+
+        <div class="cards">
+          <div class="card">
+            <div class="card-label">Chamados pendentes</div>
+            <div class="card-number" id="countPending">0</div>
+          </div>
+          <div class="card">
+            <div class="card-label">Em atendimento</div>
+            <div class="card-number" id="countWorking">0</div>
+          </div>
+          <div class="card">
+            <div class="card-label">Concluídos</div>
+            <div class="card-number" id="countDone">0</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">Chamados recentes</div>
+          <div id="recentCalls" class="empty">Carregando chamados...</div>
+        </div>
+      </section>
+
+      <!-- CHAMADOS -->
+
+      <section class="section" id="page-chamados">
+        <h1 class="page-title">Chamados</h1>
+        <p class="page-description">Acompanhe as solicitações entre os setores.</p>
+
+        <div class="panel">
+          <div class="panel-title">Todos os chamados</div>
+          <div id="callsList" class="empty">Carregando...</div>
+        </div>
+      </section>
+
+      <!-- NOVO CHAMADO -->
+
+      <section class="section" id="page-novo">
+        <h1 class="page-title">Novo chamado</h1>
+        <p class="page-description">Envie uma solicitação para outro setor.</p>
+
+        <div class="panel">
+          <form id="callForm">
+            <label for="destination">Enviar para</label>
+            <select id="destination" required>
+              <option value="">Selecione o setor</option>
+              <option value="estoque">Estoque</option>
+              <option value="atendimento">Atendimento</option>
+            </select>
+
+            <label for="callMessage">Mensagem</label>
+            <textarea id="callMessage" maxlength="2000"
+              placeholder="Descreva o que precisa..." required></textarea>
+
+            <button class="primary" type="submit" id="callButton">
+              Enviar chamado
+            </button>
+            <div class="message" id="callMessageStatus"></div>
+          </form>
+        </div>
+      </section>
+
+      <!-- FUNCIONÁRIOS -->
+
+      <section class="section" id="page-funcionarios">
+        <h1 class="page-title">Funcionários</h1>
+        <p class="page-description">Gerencie os acessos da equipe Raízes.</p>
+
+        <div class="grid-two">
+          <div class="panel">
+            <div class="panel-title">Cadastrar funcionário</div>
+
+            <form id="employeeForm">
+              <label for="employeeName">Nome</label>
+              <input id="employeeName" maxlength="100" required>
+
+              <label for="employeeEmail">E-mail</label>
+              <input id="employeeEmail" type="email" required>
+
+              <label for="employeePassword">Senha inicial</label>
+              <input id="employeePassword" type="password"
+                minlength="12" maxlength="128" required>
+
+              <label for="employeeRole">Setor</label>
+              <select id="employeeRole" required>
+                <option value="estoque">Estoque</option>
+                <option value="atendimento">Atendimento</option>
+              </select>
+
+              <button class="primary full" id="employeeButton">
+                Cadastrar funcionário
+              </button>
+
+              <div class="message" id="employeeMessage"></div>
+            </form>
+          </div>
+
+          <div class="panel">
+            <div class="panel-title">Equipe cadastrada</div>
+            <div id="employeeList" class="empty">Carregando...</div>
+          </div>
+        </div>
+      </section>
+
+    </div>
   </main>
+</div>
 
-  <script type="module">
-    import { createClient } from
-      "https://esm.sh/@supabase/supabase-js@2";
+<script type="module">
+import { createClient } from
+  "https://esm.sh/@supabase/supabase-js@2";
 
-    // CONFIGURAÇÃO DO SUPABASE
+// CONFIGURAÇÃO
 
-    const SUPABASE_URL =
-      "https://chgoviyljsloplqejeib.supabase.co";
+const SUPABASE_URL =
+  "https://chgoviyljsloplqejeib.supabase.co";
 
-    const SUPABASE_KEY =
-      "sb_publishable_HFiA8vLI0sJF4vWLuJ4nsQ_kH9-pLQm";
+const SUPABASE_KEY =
+  "sb_publishable_HFiA8vLI0sJF4vWLuJ4nsQ_kH9-pLQm";
 
-    const status = document.getElementById("status");
-    const form = document.getElementById("loginForm");
-    const button = document.getElementById("loginButton");
+const configurado =
+  SUPABASE_URL === "https://chgoviyljsloplqejeib.supabase.co" &&
+  SUPABASE_KEY.startsWith("sb_publishable_");
 
-    // VALIDAR CONFIGURAÇÃO
+if (!configurado) {
+  document.getElementById("loginMessage").textContent =
+    "Configuração do Supabase pendente.";
+  throw new Error("Configuração inválida.");
+}
 
-    const configurado =
-      SUPABASE_URL === "https://chgoviyljsloplqejeib.supabase.co" &&
-      SUPABASE_KEY.startsWith("sb_publishable_");
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    if (!configurado) {
-      status.textContent = "Configuração do sistema pendente.";
+let currentUser = null;
+let currentProfile = null;
+let callsCache = [];
+
+// ELEMENTOS
+
+const $ = id => document.getElementById(id);
+
+function notify(message, success = false) {
+  $("globalMessage").textContent = message;
+  $("globalMessage").style.color = success ? "#26734d" : "#a34838";
+}
+
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#39;"
+  })[char]);
+}
+
+function roleName(role) {
+  return ({
+    admin:"Administrador",
+    estoque:"Estoque",
+    atendimento:"Atendimento"
+  })[role] || role;
+}
+
+function statusName(status) {
+  return ({
+    pendente:"Pendente",
+    em_atendimento:"Em atendimento",
+    concluido:"Concluído"
+  })[status] || status;
+}
+
+function formatDate(date) {
+  return new Date(date).toLocaleString("pt-BR", {
+    dateStyle:"short",
+    timeStyle:"short"
+  });
+}
+
+// NAVEGAÇÃO
+
+function navigate(page) {
+  document.querySelectorAll(".section").forEach(section => {
+    section.classList.remove("active");
+  });
+
+  $("page-" + page)?.classList.add("active");
+
+  document.querySelectorAll(".nav-btn").forEach(button => {
+    button.classList.toggle("active", button.dataset.page === page);
+  });
+
+  const titles = {
+    dashboard:"Dashboard",
+    chamados:"Chamados",
+    novo:"Novo chamado",
+    funcionarios:"Funcionários"
+  };
+
+  $("topbarTitle").textContent = titles[page] || "Raízes Conecta";
+
+  if (page === "dashboard" || page === "chamados") {
+    loadCalls();
+  }
+
+  if (page === "funcionarios") {
+    loadEmployees();
+  }
+
+  if (page === "novo") {
+    const destination = $("destination");
+
+    if (currentProfile.funcao === "estoque") {
+      destination.value = "atendimento";
+      destination.disabled = true;
+    } else if (currentProfile.funcao === "atendimento") {
+      destination.value = "estoque";
+      destination.disabled = true;
     } else {
-      const supabase = createClient(
-        SUPABASE_URL,
-        SUPABASE_KEY
-      );
-
-      form.addEventListener("submit", async (event) => {
-        event.preventDefault();
-
-        button.disabled = true;
-        status.style.color = "#a34838";
-        status.textContent = "Verificando acesso...";
-
-        try {
-          const email =
-            document.getElementById("email").value.trim();
-
-          const password =
-            document.getElementById("password").value;
-
-          const { data, error } =
-            await supabase.auth.signInWithPassword({
-              email,
-              password
-            });
-
-          if (error) {
-            status.textContent =
-              "Não foi possível entrar. Confira seus dados.";
-            return;
-          }
-
-          const { data: perfil, error: perfilError } =
-            await supabase
-              .from("perfis")
-              .select("nome, funcao, ativo")
-              .eq("id", data.user.id)
-              .single();
-
-          if (perfilError || !perfil || perfil.ativo !== true) {
-            await supabase.auth.signOut();
-
-            status.textContent =
-              "Usuário sem acesso autorizado.";
-
-            return;
-          }
-
-          status.style.color = "#26734d";
-
-          status.textContent =
-            `Bem-vindo, ${perfil.nome}! Login realizado com sucesso.`;
-
-          console.log("Perfil autenticado:", {
-            nome: perfil.nome,
-            funcao: perfil.funcao
-          });
-
-        } catch (error) {
-          console.error("Erro no login:", error);
-
-          status.textContent =
-            "Erro de conexão. Tente novamente.";
-
-        } finally {
-          button.disabled = false;
-        }
-      });
+      destination.disabled = false;
     }
-  </script>
+  }
+}
+
+document.querySelectorAll(".nav-btn").forEach(button => {
+  button.addEventListener("click", () => navigate(button.dataset.page));
+});
+
+// AUTENTICAÇÃO
+
+async function checkSession() {
+  const { data, error } = await supabase.auth.getSession();
+
+  if (error || !data.session) {
+    showLogin();
+    return;
+  }
+
+  await loadProfile(data.session.user);
+}
+
+function showLogin() {
+  currentUser = null;
+  currentProfile = null;
+
+  $("app").classList.add("hidden");
+  $("loginScreen").classList.remove("hidden");
+}
+
+async function loadProfile(user) {
+  const { data: profile, error } = await supabase
+    .from("perfis")
+    .select("id,nome,funcao,ativo")
+    .eq("id", user.id)
+    .single();
+
+  if (error || !profile || profile.ativo !== true) {
+    await supabase.auth.signOut();
+    showLogin();
+    $("loginMessage").textContent = "Usuário sem acesso autorizado.";
+    return;
+  }
+
+  currentUser = user;
+  currentProfile = profile;
+
+  $("loginScreen").classList.add("hidden");
+  $("app").classList.remove("hidden");
+
+  $("topUser").textContent = profile.nome;
+  $("sidebarUser").textContent = profile.nome;
+  $("topRole").textContent = roleName(profile.funcao);
+
+  document.querySelectorAll(".admin-only").forEach(element => {
+    element.classList.toggle("hidden", profile.funcao !== "admin");
+  });
+
+  $("destination").disabled = false;
+
+  if (profile.funcao !== "admin") {
+    $("destination").value =
+      profile.funcao === "estoque" ? "atendimento" : "estoque";
+  }
+
+  navigate("dashboard");
+}
+
+$("loginForm").addEventListener("submit", async event => {
+  event.preventDefault();
+
+  const button = $("loginButton");
+  button.disabled = true;
+  $("loginMessage").textContent = "Verificando acesso...";
+
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email:$("email").value.trim(),
+      password:$("password").value
+    });
+
+    if (error) {
+      $("loginMessage").textContent =
+        "Não foi possível entrar. Confira seus dados.";
+      return;
+    }
+
+    await loadProfile(data.user);
+  } catch (error) {
+    console.error(error);
+    $("loginMessage").textContent = "Erro de conexão.";
+  } finally {
+    button.disabled = false;
+  }
+});
+
+$("logoutButton").addEventListener("click", async () => {
+  await supabase.auth.signOut();
+  showLogin();
+});
+
+supabase.auth.onAuthStateChange((event, session) => {
+  if (event === "SIGNED_OUT") showLogin();
+});
+
+// CHAMADOS
+
+async function loadCalls() {
+  if (!currentProfile) return;
+
+  $("callsList").textContent = "Carregando...";
+  $("recentCalls").textContent = "Carregando...";
+
+  const { data, error } = await supabase
+    .from("chamados")
+    .select("id,criado_por,destinatario,mensagem,status,atendido_por,criado_em")
+    .order("criado_em", { ascending:false })
+    .limit(100);
+
+  if (error) {
+    console.error(error);
+    $("callsList").textContent = "Não foi possível carregar os chamados.";
+    $("recentCalls").textContent = "Não foi possível carregar os chamados.";
+    return;
+  }
+
+  callsCache = data || [];
+
+  const pending = callsCache.filter(c => c.status === "pendente").length;
+  const working = callsCache.filter(c => c.status === "em_atendimento").length;
+  const done = callsCache.filter(c => c.status === "concluido").length;
+
+  $("countPending").textContent = pending;
+  $("countWorking").textContent = working;
+  $("countDone").textContent = done;
+
+  renderCalls("callsList", callsCache);
+  renderCalls("recentCalls", callsCache.slice(0,5));
+}
+
+function renderCalls(elementId, calls) {
+  const element = $(elementId);
+
+  if (!calls.length) {
+    element.innerHTML = '<div class="empty">Nenhum chamado encontrado.</div>';
+    return;
+  }
+
+  element.innerHTML = `
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Mensagem</th>
+            <th>Destino</th>
+            <th>Data</th>
+            <th>Status</th>
+            <th>Ação</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${calls.map(call => `
+            <tr>
+              <td>${escapeHTML(call.mensagem)}</td>
+              <td>${escapeHTML(roleName(call.destinatario))}</td>
+              <td>${formatDate(call.criado_em)}</td>
+              <td>
+                <span class="status ${escapeHTML(call.status)}">
+                  ${escapeHTML(statusName(call.status))}
+                </span>
+              </td>
+              <td>${call.status !== "concluido" ? `
+                <button class="small-btn" data-finish="${escapeHTML(call.id)}">
+                  Concluir
+                </button>
+              ` : "—"}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  element.querySelectorAll("[data-finish]").forEach(button => {
+    button.addEventListener("click", () => {
+      finishCall(button.dataset.finish);
+    });
+  });
+}
+
+async function finishCall(id) {
+  const call = callsCache.find(item => item.id === id);
+
+  if (!call || call.status === "concluido") return;
+
+  const isRecipient =
+    currentProfile.funcao === "admin" ||
+    currentProfile.funcao === call.destinatario;
+
+  if (!isRecipient) {
+    notify("Somente o setor destinatário pode concluir este chamado.");
+    return;
+  }
+
+  const { error } = await supabase
+    .from("chamados")
+    .update({
+      status:"concluido",
+      atendido_por:currentUser.id,
+      atualizado_em:new Date().toISOString()
+    })
+    .eq("id", id);
+
+  if (error) {
+    console.error(error);
+    notify("Não foi possível concluir o chamado.");
+    return;
+  }
+
+  notify("Chamado concluído!", true);
+  await loadCalls();
+}
+
+// CRIAR CHAMADO
+
+$("callForm").addEventListener("submit", async event => {
+  event.preventDefault();
+
+  const button = $("callButton");
+  const message = $("callMessageStatus");
+
+  button.disabled = true;
+  message.textContent = "Enviando chamado...";
+
+  try {
+    const destination = $("destination").value;
+    const description = $("callMessage").value.trim();
+
+    if (!description) {
+      message.textContent = "Digite uma mensagem.";
+      return;
+    }
+
+    const { error } = await supabase
+      .from("chamados")
+      .insert({
+        criado_por:currentUser.id,
+        destinatario:destination,
+        mensagem:description
+      });
+
+    if (error) {
+      console.error(error);
+      message.textContent = "Não foi possível enviar o chamado.";
+      return;
+    }
+
+    $("callMessage").value = "";
+    message.className = "message success";
+    message.textContent = "Chamado enviado com sucesso!";
+
+    await loadCalls();
+
+  } catch (error) {
+    console.error(error);
+    message.textContent = "Erro de conexão.";
+  } finally {
+    button.disabled = false;
+  }
+});
+
+// FUNCIONÁRIOS
+
+async function loadEmployees() {
+  if (currentProfile.funcao !== "admin") return;
+
+  $("employeeList").textContent = "Carregando...";
+
+  const { data, error } = await supabase
+    .from("perfis")
+    .select("id,nome,funcao,ativo,criado_em")
+    .order("criado_em", { ascending:false });
+
+  if (error) {
+    console.error(error);
+    $("employeeList").textContent = "Não foi possível carregar a equipe.";
+    return;
+  }
+
+  if (!data.length) {
+    $("employeeList").textContent = "Nenhum funcionário cadastrado.";
+    return;
+  }
+
+  $("employeeList").innerHTML = `
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Setor</th>
+            <th>Situação</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${data.map(person => `
+            <tr>
+              <td>${escapeHTML(person.nome)}</td>
+              <td>${escapeHTML(roleName(person.funcao))}</td>
+              <td>${person.ativo ? "Ativo" : "Inativo"}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+$("employeeForm").addEventListener("submit", async event => {
+  event.preventDefault();
+
+  if (currentProfile.funcao !== "admin") return;
+
+  const button = $("employeeButton");
+  const message = $("employeeMessage");
+
+  button.disabled = true;
+  message.className = "message";
+  message.textContent = "Criando funcionário...";
+
+  try {
+    const payload = {
+      nome:$("employeeName").value.trim(),
+      email:$("employeeEmail").value.trim(),
+      senha:$("employeePassword").value,
+      funcao:$("employeeRole").value
+    };
+
+    const { data, error } = await supabase.functions.invoke(
+      "gerenciar-funcionarios",
+      { body:payload }
+    );
+
+    if (error || !data?.success) {
+      console.error(error, data);
+      message.textContent =
+        data?.error || "Não foi possível cadastrar o funcionário.";
+      return;
+    }
+
+    message.className = "message success";
+    message.textContent = "Funcionário cadastrado com sucesso!";
+
+    $("employeeForm").reset();
+    await loadEmployees();
+
+  } catch (error) {
+    console.error(error);
+    message.textContent = "Erro de conexão ao cadastrar.";
+  } finally {
+    button.disabled = false;
+  }
+});
+
+// INICIALIZAÇÃO
+
+checkSession();
+
+</script>
 </body>
 </html>
