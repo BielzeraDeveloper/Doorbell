@@ -325,6 +325,19 @@ th {
   line-height:1.45;
   overflow-wrap:anywhere;
 }
+.chat-layout { display:grid; grid-template-rows:minmax(280px,1fr) auto; gap:14px; }
+.chat-messages { height:min(58vh,560px); min-height:280px; overflow:auto; padding:14px; background:#f8faf7; border:1px solid var(--border); border-radius:11px; }
+.chat-message { max-width:78%; margin:0 0 13px; padding:11px 13px; border-radius:12px; background:white; border:1px solid var(--border); overflow-wrap:anywhere; }
+.chat-message.mine { margin-left:auto; background:#eaf3ec; border-color:#d7e7da; }
+.chat-meta { display:flex; gap:8px; align-items:center; color:var(--muted); font-size:11px; margin-bottom:6px; }
+.chat-meta strong { color:var(--green); }
+.chat-body { white-space:pre-wrap; font-size:14px; line-height:1.45; }
+.chat-compose { display:flex; gap:10px; align-items:flex-end; }
+.chat-compose textarea { min-height:48px; max-height:130px; resize:vertical; }
+.chat-compose button { white-space:nowrap; }
+.employee-edit { display:flex; gap:7px; align-items:center; min-width:190px; }
+.employee-edit select { padding:8px; min-width:125px; }
+@media(max-width:600px) { .chat-message { max-width:92%; } .chat-compose { display:grid; grid-template-columns:1fr; } .chat-compose button { width:100%; } }
 @media(max-width:850px) {
   .sidebar { width:205px; }
   .content { padding:22px; }
@@ -407,6 +420,7 @@ th {
 
     <button class="nav-btn active" data-page="dashboard">⌂ &nbsp; Dashboard</button>
     <button class="nav-btn" data-page="chamados">▤ &nbsp; Chamados</button>
+    <button class="nav-btn" data-page="chat">▤ &nbsp; Chat global</button>
     <button class="nav-btn" data-page="novo">＋ &nbsp; Novo chamado</button>
     <button class="nav-btn admin-only" data-page="funcionarios">♙ &nbsp; Funcionários</button>
 
@@ -498,6 +512,23 @@ th {
         </div>
       </section>
 
+      <!-- CHAT GLOBAL -->
+
+      <section class="section" id="page-chat">
+        <h1 class="page-title">Chat global</h1>
+        <p class="page-description">Conversa interna entre todos os funcionários ativos da Raízes.</p>
+        <div class="panel chat-layout">
+          <div id="chatMessages" class="chat-messages" aria-live="polite">
+            <div class="empty">Carregando conversa...</div>
+          </div>
+          <form id="chatForm" class="chat-compose">
+            <textarea id="chatInput" maxlength="2000" rows="2" placeholder="Escreva uma mensagem para toda a equipe..." required></textarea>
+            <button class="primary" id="chatSendButton" type="submit">Enviar mensagem</button>
+          </form>
+          <div class="message" id="chatStatus" aria-live="polite"></div>
+        </div>
+      </section>
+
       <!-- FUNCIONÁRIOS -->
 
       <section class="section" id="page-funcionarios">
@@ -572,6 +603,8 @@ let currentUser = null;
 let currentProfile = null;
 let callsCache = [];
 let callsChannel = null;
+let chatChannel = null;
+let chatCache = [];
 let audioContext = null;
 let toastTimer = null;
 
@@ -615,27 +648,31 @@ async function playNotificationSound() {
   const ready = await prepareAudio();
   if (!ready || !audioContext) return;
 
-  // Dois tons curtos e suaves, gerados pelo próprio navegador.
+  // Toque de campainha suave: três notas com harmônicos e cauda curta.
   const now = audioContext.currentTime;
-  [660, 880].forEach((frequency, index) => {
-    const oscillator = audioContext.createOscillator();
-    const gain = audioContext.createGain();
-    const start = now + index * 0.17;
-    oscillator.type = "sine";
-    oscillator.frequency.setValueAtTime(frequency, start);
-    gain.gain.setValueAtTime(0.0001, start);
-    gain.gain.exponentialRampToValueAtTime(0.12, start + 0.025);
-    gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.14);
-    oscillator.connect(gain);
-    gain.connect(audioContext.destination);
-    oscillator.start(start);
-    oscillator.stop(start + 0.15);
+  const notes = [784, 988, 1175];
+  notes.forEach((frequency, index) => {
+    const start = now + index * 0.19;
+    [1, 2.01].forEach((partial, partIndex) => {
+      const oscillator = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      oscillator.type = partIndex === 0 ? "sine" : "triangle";
+      oscillator.frequency.setValueAtTime(frequency * partial, start);
+      const peak = partIndex === 0 ? 0.105 : 0.018;
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.exponentialRampToValueAtTime(peak, start + 0.035);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.52);
+      oscillator.connect(gain);
+      gain.connect(audioContext.destination);
+      oscillator.start(start);
+      oscillator.stop(start + 0.54);
+    });
   });
 }
 
 function showCallNotification(call) {
   $("notificationTitle").textContent =
-    "Novo chamado para " + roleName(call.destinatario);
+    "Novo chamado recebido · " + roleName(call.destinatario);
   $("notificationText").textContent = call.mensagem;
   $("notificationToast").classList.add("show");
   clearTimeout(toastTimer);
@@ -680,6 +717,22 @@ function subscribeToCalls() {
     .subscribe(status => {
       if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
         console.warn("Não foi possível conectar ao canal de chamados:", status);
+      }
+    });
+
+  if (chatChannel) supabase.removeChannel(chatChannel);
+  chatChannel = supabase
+    .channel("raizes-conecta-chat-global")
+    .on("postgres_changes", { event:"INSERT", schema:"public", table:"mensagens_chat" }, payload => {
+      const incoming = payload.new;
+      if (incoming.usuario_id !== currentUser.id) {
+        showChatNotification(incoming);
+      }
+      loadChat(false);
+    })
+    .subscribe(status => {
+      if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+        console.warn("Não foi possível conectar ao chat global:", status);
       }
     });
 }
@@ -756,6 +809,7 @@ function navigate(page) {
   const titles = {
     dashboard:"Dashboard",
     chamados:"Chamados",
+    chat:"Chat global",
     novo:"Novo chamado",
     funcionarios:"Funcionários"
   };
@@ -768,6 +822,10 @@ function navigate(page) {
 
   if (page === "funcionarios") {
     loadEmployees();
+  }
+
+  if (page === "chat") {
+    loadChat(true);
   }
 
   if (page === "novo") {
@@ -806,6 +864,10 @@ function showLogin() {
   if (callsChannel) {
     supabase.removeChannel(callsChannel);
     callsChannel = null;
+  }
+  if (chatChannel) {
+    supabase.removeChannel(chatChannel);
+    chatChannel = null;
   }
   currentUser = null;
   currentProfile = null;
@@ -1058,6 +1120,68 @@ $("callForm").addEventListener("submit", async event => {
   }
 });
 
+// CHAT GLOBAL
+
+function showChatNotification(message) {
+  $("notificationTitle").textContent = "Nova mensagem no chat global · " + (message.nome_usuario || "Equipe");
+  $("notificationText").textContent = message.mensagem;
+  $("notificationToast").classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => $("notificationToast").classList.remove("show"), 6500);
+  playNotificationSound();
+}
+
+async function loadChat(scrollToBottom = false) {
+  if (!currentUser) return;
+  const box = $("chatMessages");
+  const wasNearBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 90;
+  const { data, error } = await supabase.from("mensagens_chat")
+    .select("id,usuario_id,nome_usuario,funcao_usuario,mensagem,criado_em")
+    .order("criado_em", { ascending:true })
+    .limit(200);
+  if (error) {
+    console.error("Erro ao carregar chat:", error);
+    box.innerHTML = '<div class="empty">Não foi possível carregar o chat. Verifique se executou o SQL do chat global.</div>';
+    return;
+  }
+  chatCache = data || [];
+  if (!chatCache.length) {
+    box.innerHTML = '<div class="empty">Ainda não há mensagens. Comece a conversa com a equipe!</div>';
+    return;
+  }
+  box.innerHTML = chatCache.map(item => `
+    <div class="chat-message ${item.usuario_id === currentUser.id ? "mine" : ""}">
+      <div class="chat-meta"><strong>${escapeHTML(item.nome_usuario)}</strong><span>${escapeHTML(roleName(item.funcao_usuario))}</span><span>${formatDate(item.criado_em)}</span></div>
+      <div class="chat-body">${escapeHTML(item.mensagem)}</div>
+    </div>
+  `).join("");
+  if (scrollToBottom || wasNearBottom) box.scrollTop = box.scrollHeight;
+}
+
+$("chatForm").addEventListener("submit", async event => {
+  event.preventDefault();
+  if (!currentUser || !currentProfile) return;
+  const input = $("chatInput");
+  const button = $("chatSendButton");
+  const message = input.value.trim();
+  if (!message) return;
+  button.disabled = true;
+  $("chatStatus").textContent = "Enviando...";
+  const { error } = await supabase.from("mensagens_chat").insert({
+    usuario_id:currentUser.id,
+    mensagem:message
+  });
+  if (error) {
+    console.error("Erro ao enviar mensagem:", error);
+    $("chatStatus").textContent = "Não foi possível enviar. Confira se o SQL do chat foi executado.";
+  } else {
+    input.value = "";
+    $("chatStatus").textContent = "Mensagem enviada.";
+    await loadChat(true);
+  }
+  button.disabled = false;
+});
+
 // FUNCIONÁRIOS
 
 async function loadEmployees() {
@@ -1087,7 +1211,7 @@ async function loadEmployees() {
         <thead>
           <tr>
             <th>Nome</th>
-            <th>Setor</th>
+            <th>Setor / alterar</th>
             <th>Situação</th>
           </tr>
         </thead>
@@ -1095,7 +1219,17 @@ async function loadEmployees() {
           ${data.map(person => `
             <tr>
               <td>${escapeHTML(person.nome)}</td>
-              <td>${escapeHTML(roleName(person.funcao))}</td>
+              <td>
+                ${person.funcao === "admin" ? escapeHTML(roleName(person.funcao)) : `
+                  <div class="employee-edit">
+                    <select data-role-select="${escapeHTML(person.id)}" aria-label="Setor de ${escapeHTML(person.nome)}">
+                      <option value="estoque" ${person.funcao === "estoque" ? "selected" : ""}>Estoque</option>
+                      <option value="atendimento" ${person.funcao === "atendimento" ? "selected" : ""}>Atendimento</option>
+                    </select>
+                    <button class="small-btn" type="button" data-save-role="${escapeHTML(person.id)}">Salvar</button>
+                  </div>
+                `}
+              </td>
               <td>${person.ativo ? "Ativo" : "Inativo"}</td>
             </tr>
           `).join("")}
@@ -1103,6 +1237,27 @@ async function loadEmployees() {
       </table>
     </div>
   `;
+
+  $("employeeList").querySelectorAll("[data-save-role]").forEach(button => {
+    button.addEventListener("click", () => changeEmployeeRole(button.dataset.saveRole));
+  });
+}
+
+async function changeEmployeeRole(id) {
+  if (currentProfile?.funcao !== "admin") return;
+  const select = document.querySelector(`[data-role-select="${CSS.escape(id)}"]`);
+  if (!select) return;
+  const { error } = await supabase.from("perfis")
+    .update({ funcao:select.value })
+    .eq("id", id)
+    .neq("funcao", "admin");
+  if (error) {
+    console.error("Falha ao alterar setor:", error);
+    notify("Não foi possível alterar o setor. Confira as permissões do banco.");
+    return;
+  }
+  notify("Setor do funcionário atualizado.", true);
+  await loadEmployees();
 }
 
 $("employeeForm").addEventListener("submit", async event => {
@@ -1125,15 +1280,30 @@ $("employeeForm").addEventListener("submit", async event => {
       funcao:$("employeeRole").value
     };
 
-    const { data, error } = await supabase.functions.invoke(
-      "gerenciar-funcionarios",
-      { body:payload }
-    );
+    const { data:sessionData, error:sessionError } = await supabase.auth.getSession();
+    const accessToken = sessionData?.session?.access_token;
+    if (sessionError || !accessToken) {
+      message.textContent = "Sua sessão expirou. Saia e entre novamente.";
+      return;
+    }
 
-    if (error || !data?.success) {
-      console.error(error, data);
-      message.textContent =
-        data?.error || "Não foi possível cadastrar o funcionário.";
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/gerenciar-funcionarios`, {
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "Authorization":`Bearer ${accessToken}`,
+        "apikey":SUPABASE_KEY
+      },
+      body:JSON.stringify(payload)
+    });
+
+    let result = {};
+    try { result = await response.json(); } catch (_) {}
+
+    if (!response.ok || !result?.success) {
+      console.error("Erro ao cadastrar funcionário:", response.status, result);
+      const details = result?.error || result?.message || `A função respondeu com HTTP ${response.status}.`;
+      message.textContent = details;
       return;
     }
 
